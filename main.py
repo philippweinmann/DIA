@@ -1,3 +1,12 @@
+class Document:
+    def __init__(self, doc_id, matching_queries):
+        self.doc_id = doc_id
+        self.matching_queries = matching_queries
+
+    def get_number_of_matching_queries(self):
+        return len(self.matching_queries)
+        
+
 class QueryManager:
     def __init__(self):
         self.active_queries = {}
@@ -19,10 +28,19 @@ class QueryManager:
             del self.active_queries[query_id]
 
     def MatchDocument(self, doc_id, doc_str: str):
-        for query in self.active_queries:
+        matching_queries = []
 
-            pass
-        
+        for query in self.active_queries:
+            query_text = query["query_text"]
+
+            if query["match_type"] == "exact":
+                if query_text in doc_str:
+                    matching_queries.append(query)
+            else:
+                raise NotImplementedError("not implemented yet")
+
+        doc = Document(doc_id, matching_queries)
+        return doc
 
 # Example usage
 # query_manager = QueryManager()
