@@ -3,13 +3,13 @@ class QueryManager:
         self.active_queries = {}
 
     # keywords is equivalent to char str[MAX_QUERY_LENGTH]; in c++
-    def start_query(self, query_id, keywords, match_type="exact", match_distance=0):
+    def start_query(self, query_id, query_text, match_type="exact", match_distance=0):
         if query_id in self.active_queries:
             raise ValueError(f"Query ID {query_id} already exists in active queries.")
         
         # Add query to active queries with specified matching type and distance
         self.active_queries[query_id] = {
-            'keywords': keywords,
+            'query_text': query_text,
             'match_type': match_type,
             'match_distance': match_distance
         }
@@ -20,6 +20,7 @@ class QueryManager:
 
     def MatchDocument(self, doc_id, doc_str: str):
         for query in self.active_queries:
+
             pass
         
 
