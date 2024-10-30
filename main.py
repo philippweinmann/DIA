@@ -17,6 +17,10 @@ class QueryManager:
     def end_query(self, query_id):
         if query_id in self.active_queries:
             del self.active_queries[query_id]
+
+    def MatchDocument(self, doc_id, doc_str: str):
+        for query in self.active_queries:
+            pass
         
 
 # Example usage
