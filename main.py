@@ -1,9 +1,8 @@
-# Define the data structure to store active queries
 class QueryManager:
     def __init__(self):
-        # Dictionary to hold active queries with their details
         self.active_queries = {}
 
+    # keywords is equivalent to char str[MAX_QUERY_LENGTH]; in c++
     def start_query(self, query_id, keywords, match_type="exact", match_distance=0):
         if query_id in self.active_queries:
             raise ValueError(f"Query ID {query_id} already exists in active queries.")
@@ -14,6 +13,11 @@ class QueryManager:
             'match_type': match_type,
             'match_distance': match_distance
         }
+
+    def end_query(self, query_id):
+        if query_id in self.active_queries:
+            del self.active_queries[query_id]
+        
 
 # Example usage
 # query_manager = QueryManager()
