@@ -162,3 +162,6 @@ cython_debug/
 #.idea/
 
 data/big_test.txt
+
+# VSCODE FILES
+**/.DS_Store
