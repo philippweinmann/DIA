@@ -1,3 +1,5 @@
+from enum import Enum
+
 class Document:
     def __init__(self, doc_id, matching_queries):
         self.doc_id = doc_id
@@ -33,7 +35,7 @@ class QueryManager:
         for query in self.active_queries:
             query_text = query["query_text"]
 
-            if query["match_type"] == "exact":
+            if query["match_type"] == MatchType.EXACT:
                 if query_text in doc_str:
                     matching_queries.append(query)
             else:
@@ -45,3 +47,14 @@ class QueryManager:
 # Example usage
 # query_manager = QueryManager()
 # query_manager.start_query(query_id=1, keywords="data integration", match_type="edit", match_distance=2)
+
+class MatchType(Enum):
+    EXACT = "exact"
+    EDIT = "edit"
+    HAMMING = "hamming"
+
+class CommandType(Enum):
+    START_QUERY = 0
+    END_QUERY = 1
+    MATCH_DOCUMENT = 2
+    GET_NEXT_RES = 3
