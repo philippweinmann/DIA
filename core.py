@@ -1,117 +1,160 @@
-# core.py version 1.0
+# core.py
 
+from enum import Enum
+import re
 
-import numpy as np
-
-MAX_WORD_LENGTH = 256
-MAX_DOC_LENGTH = 1000
-MAX_QUERY_LENGTH = 256
-oo = float('inf')
-
-class ErrorCode:
+# Define error codes
+class ErrorCode(Enum):
     EC_SUCCESS = 0
     EC_FAIL = 1
     EC_NO_AVAIL_RES = 2
 
-class MatchType:
-    MT_EXACT_MATCH = 0
-    MT_HAMMING_DIST = 1
-    MT_EDIT_DIST = 2
+# Define MatchType enumeration to match C++ structure
+class MatchType(Enum):
+    EXACT = 0
+    EDIT = 2
+    HAMMING = 1
 
-class Query:
-    def __init__(self, query_id, string, match_type, match_dist):
-        self.query_id = query_id
-        self.str = string
-        self.match_type = match_type
-        self.match_dist = match_dist
+# Data structures for storing queries and documents
+queries = {}  # Stores active queries
+results = []  # Stores matched results for retrieval
 
-class Document:
-    def __init__(self, doc_id, num_res, query_ids):
-        self.doc_id = doc_id
-        self.num_res = num_res
-        self.query_ids = query_ids
-
-queries = []
-docs = []
-
-def edit_distance(a, b):
-    na, nb = len(a), len(b)
-    T = np.zeros((2, nb + 1), dtype=int)
-    
-    for ib in range(nb + 1):
-        T[0][ib] = ib
-
-    for ia in range(1, na + 1):
-        cur = ia % 2
-        prev = 1 - cur
-        T[cur][0] = ia
-
-        for ib in range(1, nb + 1):
-            d1 = T[prev][ib] + 1
-            d2 = T[cur][ib - 1] + 1
-            d3 = T[prev][ib - 1] + (0 if a[ia - 1] == b[ib - 1] else 1)
-            T[cur][ib] = min(d1, d2, d3)
-
-    return T[na % 2][nb]
-
-def hamming_distance(a, b):
-    if len(a) != len(b):
-        return oo
-    return sum(1 for x, y in zip(a, b) if x != y)
-
+# Initialize the indexing system
 def initialize_index():
-    global queries, docs
-    queries = []
-    docs = []
-    return ErrorCode.EC_SUCCESS
+    """
+    Clears all queries and results to initialize the indexing system.
+    """
+    global queries, results
+    queries.clear()
+    results.clear()
 
+# Cleanup function for the indexing system
 def destroy_index():
-    return ErrorCode.EC_SUCCESS
+    """
+    Clears the index, effectively the same as re-initializing.
+    """
+    initialize_index()
 
-def start_query(query_id, query_str, match_type, match_dist):
-    query = Query(query_id, query_str, match_type, match_dist)
-    queries.append(query)
+# Core function definitions
+def start_query(query_id, terms, match_type, match_dist):
+    """
+    Initializes a new query with the specified id, terms, match type, and distance.
+    """
+    if query_id in queries:
+        return ErrorCode.EC_FAIL  # Query ID already exists
+
+    # Store query information
+    queries[query_id] = {
+        'terms': terms.split(),
+        'match_type': MatchType(match_type),
+        'match_dist': match_dist
+    }
+    print(f"Added query {query_id} with terms: {terms}, match_type: {match_type}, match_dist: {match_dist}")
+    print(f"Current queries: {queries}")
     return ErrorCode.EC_SUCCESS
 
 def end_query(query_id):
-    global queries
-    queries = [q for q in queries if q.query_id != query_id]
+    """
+    Ends a query by removing it from the active query list.
+    """
+    if query_id not in queries:
+        return ErrorCode.EC_FAIL
+    del queries[query_id]
+    print(f"Removed query {query_id}. Current queries after deletion: {queries}")
+
     return ErrorCode.EC_SUCCESS
 
-def match_document(doc_id, doc_str):
-    global queries, docs
-    cur_doc_str = doc_str.strip()
-    query_ids = []
+def match_document(doc_id, content):
+    """
+    Matches a document against all active queries and stores the result if matched.
+    """
+    matched_queries = []
 
-    for query in queries:
-        matching_query = True
-        for qword in query.str.split():
-            matching_word = False
-            for dword in cur_doc_str.split():
-                if query.match_type == MatchType.MT_EXACT_MATCH and qword == dword:
-                    matching_word = True
-                elif query.match_type == MatchType.MT_HAMMING_DIST and hamming_distance(qword, dword) <= query.match_dist:
-                    matching_word = True
-                elif query.match_type == MatchType.MT_EDIT_DIST and edit_distance(qword, dword) <= query.match_dist:
-                    matching_word = True
+    for query_id, query in queries.items():
+        if matches_query(query, content):
+            matched_queries.append(query_id)
+            print(f"Query {query_id} matched with Document {doc_id}")
+        else:
+            print(f"Query {query_id} did NOT match with Document {doc_id}")
 
-                if matching_word:
-                    break
 
-            if not matching_word:
-                matching_query = False
-                break
-
-        if matching_query:
-            query_ids.append(query.query_id)
-
-    docs.append(Document(doc_id, len(query_ids), query_ids if query_ids else None))
+    if matched_queries:
+        results.append((doc_id, matched_queries))
+        print(f"Document {doc_id} matched with queries: {matched_queries}")
+    print(f"Results list after matching document {doc_id}: {results}")
     return ErrorCode.EC_SUCCESS
 
 def get_next_avail_res():
-    if not docs:
-        return ErrorCode.EC_NO_AVAIL_RES, None, 0, []
-    
-    doc = docs.pop(0)
-    return ErrorCode.EC_SUCCESS, doc.doc_id, doc.num_res, doc.query_ids if doc.query_ids else []
+    """
+    Retrieves the next available result for delivery.
+    """
+    if not results:
+        print("No available results in results list.")
+        return ErrorCode.EC_NO_AVAIL_RES, None, None, None
+
+    doc_id, matched_queries = results.pop(0)
+    print(f"Retrieved next result: Doc ID={doc_id}, Num Res={len(matched_queries)}, Query IDs={matched_queries}")
+    print(f"Results list after retrieval: {results}")
+    return ErrorCode.EC_SUCCESS, doc_id, len(matched_queries), matched_queries
+
+# Helper functions for matching logic
+def matches_query(query, content):
+    terms = query['terms']
+    match_type = query['match_type']
+    match_dist = query['match_dist']
+
+    for term in terms:
+        if match_type == MatchType.EXACT:
+            match = term in content
+            
+            if not match:
+                return False
+        elif match_type == MatchType.EDIT:
+            dist = edit_distance(term, content)
+            
+            if dist > match_dist:
+                return False
+        elif match_type == MatchType.HAMMING:
+            for doc_term in content.split():  # or however you break the document content into terms
+                dist = hamming_distance(term, doc_term)
+                #print(f"Hamming Distance Check - Term: {term}, Document Term: {doc_term}, Distance: {dist}, Threshold: {match_dist}")
+                if dist <= match_dist:
+                    return True  # Match found within threshold, stop checking further terms
+            return False  # No match found within threshold after checking all terms
+
+    return True
+
+
+# Function to calculate edit distance
+def edit_distance(s1, s2):
+    """
+    Calculates the Levenshtein distance (edit distance) between two strings.
+    """
+    len_s1, len_s2 = len(s1), len(s2)
+    dp = [[0] * (len_s2 + 1) for _ in range(len_s1 + 1)]
+
+    for i in range(len_s1 + 1):
+        dp[i][0] = i
+    for j in range(len_s2 + 1):
+        dp[0][j] = j
+
+    for i in range(1, len_s1 + 1):
+        for j in range(1, len_s2 + 1):
+            if s1[i - 1] == s2[j - 1]:
+                dp[i][j] = dp[i - 1][j - 1]
+            else:
+                dp[i][j] = min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + 1)
+
+    return dp[len_s1][len_s2]
+
+# Function to calculate Hamming distance
+def hamming_distance(s1, s2):
+    """
+    Calculates the Hamming distance between two strings of the same length.
+    If lengths differ, returns a large integer penalty (matching C++ behavior).
+    """
+    if len(s1) != len(s2):
+        return 0x7FFFFFFF  # Large penalty for differing lengths, matching C++ value
+
+    return sum(1 for x, y in zip(s1, s2) if x != y)
 

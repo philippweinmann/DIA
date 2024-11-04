@@ -1,195 +1,111 @@
 import time
-import sys
-from core import (
-    initialize_index,
-    destroy_index,
-    start_query,
-    end_query,
-    match_document,
-    get_next_avail_res,
-    ErrorCode
-)
+from core import initialize_index, start_query, end_query, match_document, get_next_avail_res, destroy_index, ErrorCode
 
-# Function to get the current time in milliseconds
-def GetClockTimeInMilliSec():
-    return int(round(time.time() * 1000))
+MAX_DOC_LENGTH = 1000
 
-# Function to print time in hours, minutes, seconds, and milliseconds format
-def PrintTime(milli_sec):
-    v = milli_sec
-    hours = v // (1000 * 60 * 60)
-    v %= (1000 * 60 * 60)
-    minutes = v // (1000 * 60)
-    v %= (1000 * 60)
-    seconds = v // 1000
-    milli_seconds = v % 1000
-    time_parts = []
-    if hours:
-        time_parts.append(f"{hours}h")
-    if minutes:
-        time_parts.append(f"{minutes}m")
-    if seconds:
-        time_parts.append(f"{seconds}s")
-    if milli_seconds:
-        time_parts.append(f"{milli_seconds}ms")
-    formatted_time = ":".join(time_parts)
-    print(f"{milli_sec}[{formatted_time}]")
+def get_clock_time_in_millisec():
+    return int(time.time() * 1000)
 
-# Function to run the test
-def TestSigmod(test_file_str):
-    print("Start Test ...")
-    try:
-        with open(test_file_str, "rt") as test_file:
-            v = GetClockTimeInMilliSec()
-            initialize_index()
+def print_time(milli_sec):
+    hours = milli_sec // (1000 * 60 * 60)
+    minutes = (milli_sec % (1000 * 60 * 60)) // (1000 * 60)
+    seconds = (milli_sec % (1000 * 60)) // 1000
+    milli_seconds = milli_sec % 1000
+    print(f"{milli_sec}[{hours}h:{minutes}m:{seconds}s:{milli_seconds}ms]")
 
-            first_result = 0
-            num_cur_results = 0
-            max_results = 100
-
-            cur_results_ret = [False] * max_results
-            cur_results_size = [0] * max_results
-            cur_results = [None] * max_results
-
-            while True:
-                line = test_file.readline()
-                if not line:
-                    break
-                parts = line.strip().split(maxsplit=2)
-                if len(parts) < 2:
-                    print("Corrupted Test File.")
-                    return
-
-                ch, id_str = parts[:2]
-                id = int(id_str)
-
-                if num_cur_results and ch in ('s', 'e'):
-                    for i in range(num_cur_results):
-
-                        err, doc_id, num_res, query_ids = get_next_avail_res()
+def process_retrieve_result(expected_doc_id, expected_num_res, expected_query_ids):
+    doc_id, num_res, query_ids = 0, 0, []
+    err, doc_id, num_res, query_ids = get_next_avail_res()
 
 
-                        if err == ErrorCode.EC_NO_AVAIL_RES:
-                            print("The call to GetNextAvailRes() returned EC_NO_AVAIL_RES, but there are still undelivered documents.")
-                            return
-                        elif err == ErrorCode.EC_FAIL:
-                            print("The call to GetNextAvailRes() returned EC_FAIL.")
-                            return
-                        elif err != ErrorCode.EC_SUCCESS:
-                            print("The call to GetNextAvailRes() returned unknown error code.")
-                            return
+    print(f"Retrieve Result: Doc ID={doc_id}, Num Res={num_res}, Query IDs={query_ids}")
+    print(f"Expected: Doc ID={expected_doc_id}, Num Res={expected_num_res}, Query IDs={expected_query_ids}")
 
-                        if doc_id < first_result or doc_id - first_result >= num_cur_results:
-                            print(f"The call to GetNextAvailRes() returned unknown document ID {doc_id}.")
-                            return
-                        if cur_results_ret[doc_id - first_result]:
-                            print(f"The call to GetNextAvailRes() returned document (ID={doc_id}) that has been delivered before.")
-                            return
+    if err == ErrorCode.EC_NO_AVAIL_RES:
+        raise Exception("Expected available results, but got EC_NO_AVAIL_RES.")
 
-                        flag_error = False
-                        if num_res != cur_results_size[doc_id - first_result]:
-                            flag_error = True
+    if err != ErrorCode.EC_SUCCESS:
+        raise Exception(f"Error occurred in GetNextAvailRes: {err}")
 
-                        for j in range(int(num_res)):
-                            if query_ids[j] != cur_results[doc_id - first_result][j]:
-                                flag_error = True
+    if doc_id != expected_doc_id or num_res != expected_num_res or query_ids != expected_query_ids:
+        raise Exception(f"Expected doc ID {expected_doc_id} with {expected_num_res} results, but got doc ID {doc_id} with {num_res} results.")
 
-                        if flag_error:
-                            print(f"The call to GetNextAvailRes() returned incorrect result for document ID {doc_id}.")
-                            print(f"Your answer is: {' '.join(map(str, query_ids))}")
-                            print(f"The correct answer is: {' '.join(map(str, cur_results[doc_id - first_result]))}")
-                            return
+def run_test():
+    test_file_str = "small_test.txt"  # Path to your test file
+    print("Start Test...")
+    
+    initialize_index()
 
-                        cur_results_ret[doc_id - first_result] = True
-                        if num_res and query_ids:
-                            query_ids.clear()
+    with open(test_file_str, "r") as test_file:
+        first_result = 0
+        num_cur_results = 0
 
-                    num_cur_results = 0
+        cur_results_ret = [False] * 100
+        cur_results_size = [0] * 100
+        cur_results = [[] for _ in range(100)]
 
-                if ch == 's':
-                    match_type, match_dist, temp = int(parts[2].split()[0]), int(parts[2].split()[1]), parts[2].split(maxsplit=2)[2]
-                    err = start_query(id, temp, match_type, match_dist)
-                    if err == ErrorCode.EC_FAIL:
-                        print("The call to StartQuery() returned EC_FAIL.")
-                        return
-                    elif err != ErrorCode.EC_SUCCESS:
-                        print("The call to StartQuery() returned unknown error code.")
-                        return
+        for line_num, line in enumerate(test_file, 1):
+            line = line.strip()
+            if not line:
+                continue
+            print(f"Processing line {line_num}: {line[:4]}")
+            parts = line.split()
+            ch = parts[0]
+            id = int(parts[1])
 
-                elif ch == 'e':
-                    err = end_query(id)
-                    if err == ErrorCode.EC_FAIL:
-                        print("The call to EndQuery() returned EC_FAIL.")
-                        return
-                    elif err != ErrorCode.EC_SUCCESS:
-                        print("The call to EndQuery() returned unknown error code.")
-                        return
+            if num_cur_results and (ch == 's' or ch == 'e'):
+                for i in range(num_cur_results):
+                    expected_doc_id = first_result + i
+                    expected_num_res = cur_results_size[i]
+                    expected_query_ids = cur_results[i]
 
-                elif ch == 'm':
-                    temp = parts[2]
-                    err = match_document(id, temp)
-                    if err == ErrorCode.EC_FAIL:
-                        print("The call to MatchDocument() returned EC_FAIL.")
-                        return
-                    elif err != ErrorCode.EC_SUCCESS:
-                        print("The call to MatchDocument() returned unknown error code.")
-                        return
+                    print(f"Validating results for document ID {expected_doc_id}...")
+                    process_retrieve_result(expected_doc_id, expected_num_res, expected_query_ids)
 
-                elif ch == 'r':
-                    try:
-                        
-                        num_res_str, *query_id_strs = parts[2].split()
-                        num_res = int(num_res_str)
-                    except ValueError:
-                        print("Corrupted Test File.")
-                        print(parts)  # For debugging
-                        return
+                cur_results_ret = [False] * 100
+                cur_results_size = [0] * 100
+                cur_results = [[] for _ in range(100)]
+                num_cur_results = 0
 
-                    
-                    if num_cur_results == 0:
-                        first_result = id
+            if ch == 's':
+                match_type = int(parts[2])
+                match_dist = int(parts[3])
+                keywords = " ".join(parts[5:])
+                print(f"StartQuery: ID={id}, Match Type={match_type}, Match Dist={match_dist}, Keywords={keywords}")
+                err = start_query(id, keywords, match_type, match_dist)
+                if err != ErrorCode.EC_SUCCESS:
+                    raise Exception(f"Error in StartQuery: {err}")
 
-                    
-                    cur_results_ret[num_cur_results] = False
-                    cur_results_size[num_cur_results] = num_res
-                    
+            elif ch == 'e':
+                print(f"EndQuery: ID={id}")
+                err = end_query(id)
+                if err != ErrorCode.EC_SUCCESS:
+                    raise Exception(f"Error in EndQuery: {err}")
 
-                    
-                    query_ids = list(map(int, query_id_strs))
+            elif ch == 'm':
+                document_content = " ".join(parts[3:])
+                print(f"MatchDocument: ID={id}, Content: {document_content[:50]}")
+                err = match_document(id, document_content)
+                if err != ErrorCode.EC_SUCCESS:
+                    raise Exception(f"Error in MatchDocument: {err}")
 
-                    
-                    while len(query_ids) < num_res:
-                        query_ids.extend(map(int, test_file.readline().strip().split()))
+            elif ch == 'r':
+                expected_num_res = int(parts[2])
+                query_ids = [int(qid) for qid in parts[3:]]
+                print(f"Expected Results: Doc ID={id}, Num Results={expected_num_res}, Query IDs={query_ids}")
 
-                    
-                    cur_results[num_cur_results] = query_ids[:num_res]
+                if num_cur_results == 0:
+                    first_result = id
+                cur_results_ret[num_cur_results] = False
+                cur_results_size[num_cur_results] = expected_num_res
+                cur_results[num_cur_results] = query_ids
+                num_cur_results += 1
 
-                    
-                    num_cur_results += 1
-                    print(f"Parts: {parts}") #Debugging
+            else:
+                raise Exception(f"Corrupted Test File. Unknown Command '{ch}'.")
 
+    destroy_index()
+    print("Your program has successfully passed all tests.")
 
-
-
-
-
-
-                else:
-                    print("Corrupted Test File. Unknown Command.")
-                    return
-
-            v = GetClockTimeInMilliSec() - v
-            destroy_index()
-            print("Your program has successfully passed all tests.")
-            print("Time=", end="")
-            PrintTime(v)
-
-    except FileNotFoundError:
-        print(f"Cannot Open File {test_file_str}")
-
-# Entry point for the test
 if __name__ == "__main__":
-    if len(sys.argv) <= 1:
-        TestSigmod("./data/small_test.txt")
-    else:
-        TestSigmod(sys.argv[1])
+    run_test()
