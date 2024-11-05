@@ -33,6 +33,8 @@ def process_retrieve_result(expected_doc_id, expected_num_res, expected_query_id
 def run_test():
     test_file_str = "small_test.txt"  # Path to your test file
     print("Start Test...")
+
+    start_time = get_clock_time_in_millisec()
     
     initialize_index()
 
@@ -106,6 +108,12 @@ def run_test():
 
     destroy_index()
     print("Your program has successfully passed all tests.")
+
+    # End timing and print elapsed time
+    end_time = get_clock_time_in_millisec()
+    elapsed_time = end_time - start_time
+    print("Elapsed Time: ", end="")
+    print_time(elapsed_time)
 
 if __name__ == "__main__":
     run_test()
