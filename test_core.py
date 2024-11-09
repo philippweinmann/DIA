@@ -18,8 +18,8 @@ def process_retrieve_result(expected_doc_id, expected_num_res, expected_query_id
     err, doc_id, num_res, query_ids = get_next_avail_res()
 
 
-    print(f"Retrieve Result: Doc ID={doc_id}, Num Res={num_res}, Query IDs={query_ids}")
-    print(f"Expected: Doc ID={expected_doc_id}, Num Res={expected_num_res}, Query IDs={expected_query_ids}")
+    # print(f"Retrieve Result: Doc ID={doc_id}, Num Res={num_res}, Query IDs={query_ids}")
+    # print(f"Expected: Doc ID={expected_doc_id}, Num Res={expected_num_res}, Query IDs={expected_query_ids}")
 
     if err == ErrorCode.EC_NO_AVAIL_RES:
         raise Exception("Expected available results, but got EC_NO_AVAIL_RES.")
@@ -31,7 +31,7 @@ def process_retrieve_result(expected_doc_id, expected_num_res, expected_query_id
         raise Exception(f"Expected doc ID {expected_doc_id} with {expected_num_res} results, but got doc ID {doc_id} with {num_res} results.")
 
 def run_test():
-    test_file_str = "small_test.txt"  # Path to your test file
+    test_file_str = "./test_data/small_test.txt"  
     print("Start Test...")
 
     start_time = get_clock_time_in_millisec()
@@ -50,7 +50,7 @@ def run_test():
             line = line.strip()
             if not line:
                 continue
-            print(f"Processing line {line_num}: {line[:4]}")
+            # print(f"Processing line {line_num}: {line[:4]}")
             parts = line.split()
             ch = parts[0]
             id = int(parts[1])
@@ -61,7 +61,7 @@ def run_test():
                     expected_num_res = cur_results_size[i]
                     expected_query_ids = cur_results[i]
 
-                    print(f"Validating results for document ID {expected_doc_id}...")
+                    # print(f"Validating results for document ID {expected_doc_id}...")
                     process_retrieve_result(expected_doc_id, expected_num_res, expected_query_ids)
 
                 cur_results_ret = [False] * 100
@@ -73,20 +73,20 @@ def run_test():
                 match_type = int(parts[2])
                 match_dist = int(parts[3])
                 keywords = " ".join(parts[5:])
-                print(f"StartQuery: ID={id}, Match Type={match_type}, Match Dist={match_dist}, Keywords={keywords}")
+                # print(f"StartQuery: ID={id}, Match Type={match_type}, Match Dist={match_dist}, Keywords={keywords}")
                 err = start_query(id, keywords, match_type, match_dist)
                 if err != ErrorCode.EC_SUCCESS:
                     raise Exception(f"Error in StartQuery: {err}")
 
             elif ch == 'e':
-                print(f"EndQuery: ID={id}")
+                # print(f"EndQuery: ID={id}")
                 err = end_query(id)
                 if err != ErrorCode.EC_SUCCESS:
                     raise Exception(f"Error in EndQuery: {err}")
 
             elif ch == 'm':
                 document_content = " ".join(parts[3:])
-                print(f"MatchDocument: ID={id}, Content: {document_content[:50]}")
+                # print(f"MatchDocument: ID={id}, Content: {document_content[:50]}")
                 err = match_document(id, document_content)
                 if err != ErrorCode.EC_SUCCESS:
                     raise Exception(f"Error in MatchDocument: {err}")
@@ -94,7 +94,7 @@ def run_test():
             elif ch == 'r':
                 expected_num_res = int(parts[2])
                 query_ids = [int(qid) for qid in parts[3:]]
-                print(f"Expected Results: Doc ID={id}, Num Results={expected_num_res}, Query IDs={query_ids}")
+                # print(f"Expected Results: Doc ID={id}, Num Results={expected_num_res}, Query IDs={query_ids}")
 
                 if num_cur_results == 0:
                     first_result = id
@@ -109,7 +109,7 @@ def run_test():
     destroy_index()
     print("Your program has successfully passed all tests.")
 
-    # End timing and print elapsed time
+    
     end_time = get_clock_time_in_millisec()
     elapsed_time = end_time - start_time
     print("Elapsed Time: ", end="")
