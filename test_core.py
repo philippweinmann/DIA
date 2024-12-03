@@ -30,15 +30,15 @@ def process_retrieve_result(expected_doc_id, expected_num_res, expected_query_id
     if doc_id != expected_doc_id or num_res != expected_num_res or query_ids != expected_query_ids:
         raise Exception(f"Expected doc ID {expected_doc_id} with {expected_num_res} results, but got doc ID {doc_id} with {num_res} results.")
 
-def run_test():
-    test_file_str = "./test_data/small_test.txt"  
+def run_test(test_fp): 
     print("Start Test...")
 
     start_time = get_clock_time_in_millisec()
     
     initialize_index()
 
-    with open(test_file_str, "r") as test_file:
+    print(f"Reading test file: {test_fp}")
+    with open(test_fp, "r") as test_file:
         first_result = 0
         num_cur_results = 0
 
@@ -70,6 +70,8 @@ def run_test():
                 num_cur_results = 0
 
             if ch == 's':
+                # s:start_query <query_id> <match_type> <match_dist> <num_keywords> list<keywords>
+
                 match_type = int(parts[2])
                 match_dist = int(parts[3])
                 keywords = " ".join(parts[5:])
@@ -79,12 +81,16 @@ def run_test():
                     raise Exception(f"Error in StartQuery: {err}")
 
             elif ch == 'e':
+                # e:end_query <query_id>
+
                 # print(f"EndQuery: ID={id}")
                 err = end_query(id)
                 if err != ErrorCode.EC_SUCCESS:
                     raise Exception(f"Error in EndQuery: {err}")
 
             elif ch == 'm':
+                # m:match_document <doc_id> <content>
+
                 document_content = " ".join(parts[3:])
                 # print(f"MatchDocument: ID={id}, Content: {document_content[:50]}")
                 err = match_document(id, document_content)
@@ -92,9 +98,9 @@ def run_test():
                     raise Exception(f"Error in MatchDocument: {err}")
 
             elif ch == 'r':
+                # r:retrieve <doc_id> <num_res> list<query_ids>
                 expected_num_res = int(parts[2])
                 query_ids = [int(qid) for qid in parts[3:]]
-                # print(f"Expected Results: Doc ID={id}, Num Results={expected_num_res}, Query IDs={query_ids}")
 
                 if num_cur_results == 0:
                     first_result = id
@@ -116,4 +122,5 @@ def run_test():
     print_time(elapsed_time)
 
 if __name__ == "__main__":
-    run_test()
+    file_path = "./data/small_test.txt"
+    run_test(file_path)
