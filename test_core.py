@@ -1,22 +1,12 @@
 import time
 from core import initialize_index, start_query, end_query, match_document, get_next_avail_res, destroy_index, ErrorCode
 
+from datetime import timedelta
+from testing_utils import timeit
 import logging
 logging.basicConfig()
 
 MAX_DOC_LENGTH = 1000
-
-def get_clock_time_in_millisec():
-    return int(time.time() * 1000)
-
-def log_time(start_time):
-    end_time = get_clock_time_in_millisec()
-    elapsed_time = end_time - start_time
-    hours = elapsed_time // (1000 * 60 * 60)
-    minutes = (elapsed_time % (1000 * 60 * 60)) // (1000 * 60)
-    seconds = (elapsed_time % (1000 * 60)) // 1000
-    milli_seconds = elapsed_time % 1000
-    logging.info(f"Elapsed time: {elapsed_time}[{hours}h:{minutes}m:{seconds}s:{milli_seconds}ms]")
 
 def verify_retrieve_result(expected_doc_id, expected_num_res, expected_query_ids):
     err, doc_id, num_res, query_ids = get_next_avail_res()
@@ -29,10 +19,9 @@ def verify_retrieve_result(expected_doc_id, expected_num_res, expected_query_ids
     assert num_res == expected_num_res
     assert query_ids == expected_query_ids
 
+@timeit
 def run_test(test_fp): 
     logging.info("Starting Test...")
-
-    start_time = get_clock_time_in_millisec()
     
     initialize_index()
 
@@ -90,8 +79,6 @@ def run_test(test_fp):
 
     destroy_index()
     logging.info(f"Your program has successfully passed all tests in file {file_path}.")
-
-    log_time(start_time)
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO) # Change to logging.DEBUG for more detailed
