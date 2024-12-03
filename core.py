@@ -1,5 +1,4 @@
 from enum import Enum
-import re
 
 class ErrorCode(Enum):
     EC_SUCCESS = 0
