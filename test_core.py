@@ -14,9 +14,7 @@ def print_time(milli_sec):
     print(f"{milli_sec}[{hours}h:{minutes}m:{seconds}s:{milli_seconds}ms]")
 
 def process_retrieve_result(expected_doc_id, expected_num_res, expected_query_ids):
-    doc_id, num_res, query_ids = 0, 0, []
     err, doc_id, num_res, query_ids = get_next_avail_res()
-
 
     # print(f"Retrieve Result: Doc ID={doc_id}, Num Res={num_res}, Query IDs={query_ids}")
     # print(f"Expected: Doc ID={expected_doc_id}, Num Res={expected_num_res}, Query IDs={expected_query_ids}")
