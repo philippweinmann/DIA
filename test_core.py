@@ -1,26 +1,11 @@
-import time
 from core import initialize_index, start_query, end_query, match_document, get_next_avail_res, destroy_index, ErrorCode
 
-from datetime import timedelta
 from testing_utils import timeit
 import logging
 logging.basicConfig()
 
-MAX_DOC_LENGTH = 1000
-
-def verify_retrieve_result(expected_doc_id, expected_num_res, expected_query_ids):
-    err, doc_id, num_res, query_ids = get_next_avail_res()
-
-    logging.debug(f"Retrieve Result: Doc ID={doc_id}, Num Res={num_res}, Query IDs={query_ids}")
-    logging.debug(f"Expected: Doc ID={expected_doc_id}, Num Res={expected_num_res}, Query IDs={expected_query_ids}")
-
-    assert err == ErrorCode.EC_SUCCESS, f"Error in GetNextAvailRes: {err}"
-    assert doc_id == expected_doc_id
-    assert num_res == expected_num_res
-    assert query_ids == expected_query_ids
-
 @timeit
-def run_test(test_fp): 
+def run_test_driver(test_fp): 
     logging.info("Starting Test...")
     
     initialize_index()
@@ -66,13 +51,21 @@ def run_test(test_fp):
                 
                 case 'r': # r:retrieve <doc_id> <num_res> list<query_ids>
                     expected_num_res = int(line_tokens[2])
-                    query_ids = [int(qid) for qid in line_tokens[3:]]
+                    doc_id = id
+
+                    expected_query_ids = [int(qid) for qid in line_tokens[3:]]
 
                     logging.debug(f"Retrieving results for document ID {id}...")
-                    logging.debug(f"Expected: Num Res={expected_num_res}, Query IDs={query_ids}")
+                    logging.debug(f"Expected: Num Res={expected_num_res}, Expected Query IDs={expected_query_ids}")
 
                     # Verify the results immediately
-                    verify_retrieve_result(id, expected_num_res, query_ids)
+                    err, predicted_doc_id, predicted_num_res, predicted_query_ids = get_next_avail_res()
+                    
+                    logging.debug(f"Expected: Doc ID={id}, Num Res={expected_num_res}, Query IDs={expected_query_ids}")
+                    assert err == ErrorCode.EC_SUCCESS, f"Error in GetNextAvailRes: {err}"
+                    assert predicted_doc_id == doc_id
+                    assert predicted_num_res == expected_num_res
+                    assert predicted_query_ids == expected_query_ids
                 
                 case _:
                     raise Exception(f"Corrupted Test File. Unknown Command '{ch}'.")
@@ -85,4 +78,4 @@ if __name__ == "__main__":
 
     # file_path = "./data/small_test.txt"
     file_path = "./data/super_small_test.txt"
-    run_test(file_path)
+    run_test_driver(file_path)
