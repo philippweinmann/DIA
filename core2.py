@@ -1,6 +1,7 @@
 from enum import Enum
 import functools
 from rapidfuzz.distance import Hamming, Levenshtein
+from trie import Trie
 
 
 class ErrorCode(Enum):
