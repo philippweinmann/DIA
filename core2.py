@@ -114,16 +114,14 @@ def matches_query(query, content):
                     break
 
             elif match_type == MatchType.EDIT:
-                dist = cached_edit_distance(term, doc_term)
-                if dist <= match_dist:
+                if get_edit_distance(term, doc_term) <= match_dist:
                     matching_word = True
-                    break  
+                    break
 
             elif match_type == MatchType.HAMMING:
-                dist = cached_hamming_distance(term, doc_term)
-                if dist <= match_dist:
+               if get_hamming_distance(term, doc_term) <= match_dist:
                     matching_word = True
-                    break  
+                    break
         
         if not matching_word:
             return False
@@ -133,36 +131,15 @@ def matches_query(query, content):
 
 # Caching-enhanced distance functions
 @functools.lru_cache(maxsize=None)
-def cached_edit_distance(s1, s2):
+def get_edit_distance(s1, s2):
     """
     Calculates the edit distance between two strings, optimized with dynamic programming.
     """
-    len_s1, len_s2 = len(s1), len(s2)
-    if len_s1 == 0:
-        return len_s2
-    if len_s2 == 0:
-        return len_s1
-
-    prev_row = list(range(len_s2 + 1))
-    curr_row = [0] * (len_s2 + 1)
-
-    for i in range(1, len_s1 + 1):
-        curr_row[0] = i
-        for j in range(1, len_s2 + 1):
-            insert_cost = prev_row[j] + 1
-            delete_cost = curr_row[j - 1] + 1
-            replace_cost = prev_row[j - 1]
-            if s1[i - 1] != s2[j - 1]:
-                replace_cost += 1
-            curr_row[j] = min(insert_cost, delete_cost, replace_cost)
-        
-        prev_row, curr_row = curr_row, prev_row
-
-    return prev_row[len_s2]
+    return Levenshtein.distance(s1, s2)
 
 
 @functools.lru_cache(maxsize=None)
-def cached_hamming_distance(s1, s2):
+def get_hamming_distance(s1, s2):
     """
     Calculates the Hamming distance between two strings of the same length, with caching.
     If lengths differ, returns a large integer penalty.
@@ -170,4 +147,4 @@ def cached_hamming_distance(s1, s2):
     if len(s1) != len(s2):
         return 0x7FFFFFFF  
 
-    return Hamming.distance(s1, s2)
+    return Hamming.distance(s1, s2, pad=False)
