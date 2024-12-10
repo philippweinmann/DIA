@@ -1,5 +1,6 @@
 # %%
 import collections
+import numpy as np
 
 class TrieNode:
     def __init__(self):
@@ -62,6 +63,41 @@ class Trie:
         
         return dfs(self.root, "", 0)
     
+    def levshetin_search(self, word:str, max_dist:int) -> bool:
+        """
+        Returns if there is any word in the trie that is within the levshetin distance of the given word.
+        """
+        def dfs(node, current_word, current_distance):
+            print(f"Visiting node: {current_word}, current_distance: {current_distance}")
+            if current_distance > max_dist:
+                return False
+            
+            if node.is_end:
+                length_diff = abs(len(current_word) - len(word))
+                end_node_distance = current_distance + length_diff
+
+                if end_node_distance <= max_dist:
+                    return True
+            
+            for char, child in node.children.items():
+                print(f"Char: {char}, Current Word: {current_word}, Current Distance: {current_distance}")
+
+                if len(current_word + char) > len(word):
+                    next_letter_matches = False
+                elif char == word[len(current_word)]:
+                    next_letter_matches = True
+                else:
+                    next_letter_matches = False
+
+                new_distance = current_distance + (1 if not next_letter_matches else 0)
+
+                if dfs(child, current_word + char, new_distance):
+                    return True
+                
+            return False
+        
+        return dfs(self.root, "", 0)
+    
     def startsWith(self, prefix: str) -> bool:
         """
         Returns if there is any word in the trie that starts with the given prefix.
@@ -95,4 +131,18 @@ assert trie.hamming_search("apple", 1) == True
 assert trie.hamming_search("applr", 0) == False
 assert trie.hamming_search("applr", 1) == True
 assert trie.hamming_search("applr", 2) == True
+# %%
+# okay now levshetin distance
+assert trie.levshetin_search("apple", 0) == True
+assert trie.levshetin_search("apple", 1) == True
+assert trie.levshetin_search("applr", 0) == False
+assert trie.levshetin_search("applr", 1) == True
+assert trie.levshetin_search("applr", 2) == True
+
+assert trie.levshetin_search("appl", 1) == True
+
+assert trie.levshetin_search("appl", 0) == False
+assert trie.levshetin_search("rppl", 2) == True
+assert trie.levshetin_search("rppl", 3) == True
+
 # %%
