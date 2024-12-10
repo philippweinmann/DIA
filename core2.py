@@ -1,5 +1,6 @@
 from enum import Enum
 import functools
+from rapidfuzz.distance import Hamming, Levenshtein
 
 
 class ErrorCode(Enum):
@@ -169,4 +170,4 @@ def cached_hamming_distance(s1, s2):
     if len(s1) != len(s2):
         return 0x7FFFFFFF  
 
-    return sum(1 for x, y in zip(s1, s2) if x != y)
+    return Hamming.distance(s1, s2)
