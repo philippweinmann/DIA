@@ -87,11 +87,29 @@ class Trie:
                 else:
                     next_letter_matches = False
 
-                new_distance = current_distance + (1 if not next_letter_matches else 0)
+                if next_letter_matches:
+                    current_results = dfs(child, current_word + char, current_distance)
+                    if current_results:
+                        doc_matches.update(current_results)
+                else:
+                    # TODO definitely need multithreading here
 
-                current_results = dfs(child, current_word + char, new_distance)
-                if current_results:
-                    doc_matches.update(current_results)
+                    # Deletion (skip current character in trie)
+                    current_results = dfs(child, current_word + char, current_distance + 1)
+                    if current_results:
+                        doc_matches.update(current_results)
+
+                    # Insertion (skip current character in word)
+                    current_results = dfs(child, current_word, current_distance + 1)
+                    if current_results:
+                        doc_matches.update(current_results)
+
+                    # Substitution (skip current character in trie and word)
+                    current_results = dfs(child, current_word + char, current_distance + 1)
+                    if current_results:
+                        doc_matches.update(current_results)
+                    
+
                 
             return doc_matches
         
