@@ -6,25 +6,28 @@ class TrieNode:
     def __init__(self):
         self.children = collections.defaultdict(TrieNode)
         self.is_end = False
+        self.doc_ids = set()
         
 
 class Trie:    
     def __init__(self):
         self.root = TrieNode()
     
-    def insert(self, word: str) -> None:
+    def insert(self, word: str, doc_id) -> None:
         current = self.root
         for letter in word:
             current = current.children[letter]
-        current.is_end = True    
+        current.is_end = True
+        current.doc_ids.add(doc_id)
         
     def exact_search(self, word: str) -> bool:
         current = self.root
         for letter in word:
             current = current.children.get(letter)
             if current is None:
-                return False
-        return current.is_end
+                # todo think about not instantiating a new set here
+                return set()
+        return current.doc_ids
     
     def hamming_search(self, word:str, max_dist:int) -> bool:
         def dfs(node, current_word, current_distance):
