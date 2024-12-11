@@ -35,38 +35,35 @@ class TestTrie(unittest.TestCase):
     def test_exact_match(self):
         self._common_exact_search(self.trie.exact_search)
 
-    def test_hamming_distance(self):
-        self._common_exact_search(self.trie.hamming_search)
-
-        # let's add some strings for hamming tests
+    def _common_hamming_search(self, search_func):
+        # this should work for hamming_search, and levshetin_search
+                # let's add some strings for hamming tests
         self.hamm_dist_1 = ["applr", "rpple", "apble"]
         self.hamm_dist_2 = ["apprr", "rprle", "rpble"]
         self.too_long_dist_1 = ["appler", "rapple", "apbple"]
         
         for word in self.hamm_dist_1:
-            assert self.doc_1_id not in self.trie.hamming_search(word, 0)
-            assert self.doc_1_id in self.trie.hamming_search(word, 1)
-            assert self.doc_1_id in self.trie.hamming_search(word, 2)
+            assert self.doc_1_id not in search_func(word, 0)
+            assert self.doc_1_id in search_func(word, 1)
+            assert self.doc_1_id in search_func(word, 2)
 
         for word in self.hamm_dist_2:
-            assert self.doc_1_id not in self.trie.hamming_search(word, 0)
-            assert self.doc_1_id not in self.trie.hamming_search(word, 1)
-            assert self.doc_1_id in self.trie.hamming_search(word, 2)
-            assert self.doc_1_id in self.trie.hamming_search(word, 3)
+            assert self.doc_1_id not in search_func(word, 0)
+            assert self.doc_1_id not in search_func(word, 1)
+            assert self.doc_1_id in search_func(word, 2)
+            assert self.doc_1_id in search_func(word, 3)
 
         for word in self.too_long_dist_1:
-            assert self.doc_1_id not in self.trie.hamming_search(word, 0)
-            assert self.doc_1_id not in self.trie.hamming_search(word, 1)
-            assert self.doc_1_id not in self.trie.hamming_search(word, 2)
+            assert self.doc_1_id not in search_func(word, 0)
+            assert self.doc_1_id not in search_func(word, 1)
+            assert self.doc_1_id not in search_func(word, 2)
 
+    def test_hamming_distance(self):
+        self._common_exact_search(self.trie.hamming_search)
+        self._common_hamming_search(self.trie.hamming_search)
 
     def test_levenshtein_distance(self):
         self._common_exact_search(self.trie.levenshtein_search)
 
 if __name__ == '__main__':
     unittest.main()
-
-# %%
-x = set()
-bool(x)
-# %%
