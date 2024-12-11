@@ -7,7 +7,7 @@ class TestTrie(unittest.TestCase):
         self.query_1_id = 1
         self.query_2_id = 2
 
-        self.in_neither_string = "NOTINTEITHERDOCS"
+        self.in_neither_string = "NOTINTEITHERQUERIES"
         self.only_in_query_1 = "apple"
         self.only_in_query_2 = "peach"
         self.in_both_queries = "banana"
@@ -21,11 +21,11 @@ class TestTrie(unittest.TestCase):
         self.levshtein_dist_1_too_long = ["appler", "rapple", "apbple"]
         self.levshtein_dist_1_too_short = ["pple", "appl", "aple"]
 
-    def _verbose_assert(self, search_function, doc_id, word, expected, dist=None):
+    def _verbose_assert(self, search_function, query_id, word, expected, dist=None):
         if dist is not None:
-            assert (doc_id in search_function(word, dist)) == expected, f"Expected {doc_id} in result of search for {word} to be {expected}"
+            assert (query_id in search_function(word, dist)) == expected, f"Expected {query_id} in result of search for {word} to be {expected}"
         else:
-            assert (doc_id in search_function(word)) == expected, f"Expected {doc_id} in result of search for {word} to be {expected}"
+            assert (query_id in search_function(word)) == expected, f"Expected {query_id} in result of search for {word} to be {expected}"
 
     def _common_exact_search(self, search_func):
         # this should work for exact_search, hamming_search, and levshetin_search
