@@ -21,19 +21,25 @@ class TestTrie(unittest.TestCase):
         self.levshtein_dist_1_too_long = ["appler", "rapple", "apbple"]
         self.levshtein_dist_1_too_short = ["pple", "appl", "aple"]
 
+    def _verbose_assert(self, search_function, doc_id, word, expected, dist=None):
+        if dist is not None:
+            assert (doc_id in search_function(word, dist)) == expected, f"Expected {doc_id} in result of search for {word} to be {expected}"
+        else:
+            assert (doc_id in search_function(word)) == expected, f"Expected {doc_id} in result of search for {word} to be {expected}"
+
     def _common_exact_search(self, search_func):
         # this should work for exact_search, hamming_search, and levshetin_search
-        assert self.doc_1_id not in search_func(self.in_neither_string)
-        assert self.doc_2_id not in search_func(self.in_neither_string)
+        self._verbose_assert(search_func, self.doc_1_id, self.in_neither_string, False)
+        self._verbose_assert(search_func, self.doc_2_id, self.in_neither_string, False)
 
-        assert self.doc_1_id in search_func(self.only_in_doc_1)
-        assert self.doc_2_id not in search_func(self.only_in_doc_1)
+        self._verbose_assert(search_func, self.doc_1_id, self.only_in_doc_1, True)
+        self._verbose_assert(search_func, self.doc_2_id, self.only_in_doc_1, False)
 
-        assert self.doc_1_id not in search_func(self.only_in_doc_2)
-        assert self.doc_2_id in search_func(self.only_in_doc_2)
+        self._verbose_assert(search_func, self.doc_1_id, self.only_in_doc_2, False)
+        self._verbose_assert(search_func, self.doc_2_id, self.only_in_doc_2, True)
 
-        assert self.doc_1_id in search_func(self.in_both_docs)
-        assert self.doc_2_id in search_func(self.in_both_docs)
+        self._verbose_assert(search_func, self.doc_1_id, self.in_both_docs, True)
+        self._verbose_assert(search_func, self.doc_2_id, self.in_both_docs, True)
 
     def test_exact_match(self):
         self._common_exact_search(self.trie.exact_search)
@@ -45,56 +51,57 @@ class TestTrie(unittest.TestCase):
         self.hamm_dist_2 = ["apprr", "rprle", "rpble"]
         
         for word in self.hamm_dist_1:
-            assert self.doc_1_id not in search_func(word, 0)
-            assert self.doc_1_id in search_func(word, 1)
-            assert self.doc_1_id in search_func(word, 2)
+            self._verbose_assert(search_func, self.doc_1_id, word, False, 0)
+            self._verbose_assert(search_func, self.doc_1_id, word, True, 1)
+            self._verbose_assert(search_func, self.doc_1_id, word, True, 2)
 
         for word in self.hamm_dist_2:
-            assert self.doc_1_id not in search_func(word, 0)
-            assert self.doc_1_id not in search_func(word, 1)
-            assert self.doc_1_id in search_func(word, 2)
-            assert self.doc_1_id in search_func(word, 3)
+            self._verbose_assert(search_func, self.doc_1_id, word, False, 0)
+            self._verbose_assert(search_func, self.doc_1_id, word, False, 1)
+            self._verbose_assert(search_func, self.doc_1_id, word, True, 2)
+            self._verbose_assert(search_func, self.doc_1_id, word, True, 3)
 
         for word in self.levshtein_dist_1_too_long:
-            assert self.doc_1_id not in search_func(word, 0)
-            assert self.doc_1_id not in search_func(word, 1)
-            assert self.doc_1_id not in search_func(word, 2)
+            self._verbose_assert(search_func, self.doc_1_id, word, False, 0)
+            self._verbose_assert(search_func, self.doc_1_id, word, False, 1)
+            self._verbose_assert(search_func, self.doc_1_id, word, False, 2)
 
         for word in self.levshtein_dist_1_too_short:
-            assert self.doc_1_id not in search_func(word, 0)
-            assert self.doc_1_id not in search_func(word, 1)
-            assert self.doc_1_id not in search_func(word, 2)
+            self._verbose_assert(search_func, self.doc_1_id, word, False, 0)
+            self._verbose_assert(search_func, self.doc_1_id, word, False, 1)
+            self._verbose_assert(search_func, self.doc_1_id, word, False, 2)
 
     def test_hamming_distance(self):
         self._common_exact_search(self.trie.hamming_search)
         self._common_hamming_search(self.trie.hamming_search)
 
     def test_levenshtein_distance(self):
-        self._common_exact_search(self.trie.levenshtein_search)
+        self._common_exact_search(self.trie.levshetin_search)
         self._common_hamming_search(self.trie.levshetin_search)
 
         for word in self.levshtein_dist_1_too_long:
-            assert self.doc_1_id not in self.trie.levshetin_search(word, 0)
-            assert self.doc_1_id in self.trie.levshetin_search(word, 1)
-            assert self.doc_1_id in self.trie.levshetin_search(word, 2)
+            self._verbose_assert(self.trie.levshetin_search, self.doc_1_id, word, False, 0)
+            self._verbose_assert(self.trie.levshetin_search, self.doc_1_id, word, True, 1)
+            self._verbose_assert(self.trie.levshetin_search, self.doc_1_id, word, True, 2)
 
         for word in self.levshtein_dist_1_too_short:
-            assert self.doc_1_id not in self.trie.levshetin_search(word, 0)
-            assert self.doc_1_id in self.trie.levshetin_search(word, 1)
-            assert self.doc_1_id in self.trie.levshetin_search(word, 2)
+            self._verbose_assert(self.trie.levshetin_search, self.doc_1_id, word, False, 0)
+            self._verbose_assert(self.trie.levshetin_search, self.doc_1_id, word, True, 1)
+            self._verbose_assert(self.trie.levshetin_search, self.doc_1_id, word, True, 2)
 
         # now we test for words that will match multiple documents but in different nodes.
         self.trie.insert("ab", self.doc_1_id)
         self.trie.insert("ba", self.doc_2_id)
 
-        assert self.doc_1_id in self.trie.levshetin_search("a", 1)
-        assert self.doc_2_id in self.trie.levshetin_search("a", 1)
+        self._verbose_assert(self.trie.levshetin_search, self.doc_1_id, "a", True, 1)
+        self._verbose_assert(self.trie.levshetin_search, self.doc_2_id, "a", True, 1)
 
         self.trie.insert("c", self.doc_1_id)
         self.trie.insert("d", self.doc_2_id)
 
-        assert self.doc_1_id in self.trie.levshetin_search("cd", 1)
-        assert self.doc_2_id in self.trie.levshetin_search("cd", 1)
+        self._verbose_assert(self.trie.levshetin_search, self.doc_1_id, "cd", True, 1)
+        self._verbose_assert(self.trie.levshetin_search, self.doc_2_id, "cd", True, 1)
+        self._verbose_assert(self.trie.levshetin_search, self.doc_1_id, "cde", False, 1)
 
 
 if __name__ == '__main__':

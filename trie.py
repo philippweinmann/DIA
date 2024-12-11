@@ -63,17 +63,19 @@ class Trie:
     
     # todo maybe switch back to exact search if max_dist is 0?
     def levshetin_search(self, word:str, max_dist:int = 0) -> bool:
+        doc_matches = set()
         def dfs(node, current_word, current_distance):
             logging.debug(f"Visiting node: {current_word}, current_distance: {current_distance}")
             if current_distance > max_dist:
-                return False
+                return self.empty_set
             
             if node.is_end:
                 length_diff = abs(len(current_word) - len(word))
                 end_node_distance = current_distance + length_diff
 
                 if end_node_distance <= max_dist:
-                    return True
+                    doc_matches.update(node.doc_ids)
+                    # Here levshtin seach cannot stop
             
             for char, child in node.children.items():
                 logging.debug(f"Char: {char}, Current Word: {current_word}, Current Distance: {current_distance}")
@@ -87,10 +89,11 @@ class Trie:
 
                 new_distance = current_distance + (1 if not next_letter_matches else 0)
 
-                if dfs(child, current_word + char, new_distance):
-                    return True
+                current_results = dfs(child, current_word + char, new_distance)
+                if current_results:
+                    doc_matches.update(current_results)
                 
-            return False
+            return doc_matches
         
         return dfs(self.root, "", 0)
     
