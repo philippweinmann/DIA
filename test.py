@@ -84,11 +84,17 @@ class TestTrie(unittest.TestCase):
             assert self.doc_1_id in self.trie.levshetin_search(word, 2)
 
         # now we test for words that will match multiple documents but in different nodes.
-        self.trie.insert("a", self.doc_1_id)
-        self.trie.insert("b", self.doc_2_id)
+        self.trie.insert("ab", self.doc_1_id)
+        self.trie.insert("ba", self.doc_2_id)
 
-        assert self.doc_1_id in self.trie.levshetin_search("ab", 1)
-        assert self.doc_2_id in self.trie.levshetin_search("ab", 1)
+        assert self.doc_1_id in self.trie.levshetin_search("a", 1)
+        assert self.doc_2_id in self.trie.levshetin_search("a", 1)
+
+        self.trie.insert("c", self.doc_1_id)
+        self.trie.insert("d", self.doc_2_id)
+
+        assert self.doc_1_id in self.trie.levshetin_search("cd", 1)
+        assert self.doc_2_id in self.trie.levshetin_search("cd", 1)
 
 
 if __name__ == '__main__':
