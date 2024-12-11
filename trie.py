@@ -18,12 +18,12 @@ class Trie:
         self.root = TrieNode()
         self.empty_set = set() # so that it only gets instantiated once.
     
-    def insert(self, word: str, doc_id) -> None:
+    def insert(self, word: str, query_id) -> None:
         current = self.root
         for letter in word:
             current = current.children[letter]
         current.is_end = True
-        current.doc_ids.add(doc_id)
+        current.doc_ids.add(query_id)
         
     def exact_search(self, word: str) -> bool:
         current = self.root
