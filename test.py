@@ -18,6 +18,9 @@ class TestTrie(unittest.TestCase):
         self.trie.insert(self.in_both_docs, self.doc_1_id)
         self.trie.insert(self.in_both_docs, self.doc_2_id)
 
+        self.levshtein_dist_1_too_long = ["appler", "rapple", "apbple"]
+        self.levshtein_dist_1_too_short = ["pple", "appl", "aple"]
+
     def _common_exact_search(self, search_func):
         # this should work for exact_search, hamming_search, and levshetin_search
         assert self.doc_1_id not in search_func(self.in_neither_string)
@@ -40,7 +43,6 @@ class TestTrie(unittest.TestCase):
                 # let's add some strings for hamming tests
         self.hamm_dist_1 = ["applr", "rpple", "apble"]
         self.hamm_dist_2 = ["apprr", "rprle", "rpble"]
-        self.too_long_dist_1 = ["appler", "rapple", "apbple"]
         
         for word in self.hamm_dist_1:
             assert self.doc_1_id not in search_func(word, 0)
@@ -53,7 +55,12 @@ class TestTrie(unittest.TestCase):
             assert self.doc_1_id in search_func(word, 2)
             assert self.doc_1_id in search_func(word, 3)
 
-        for word in self.too_long_dist_1:
+        for word in self.levshtein_dist_1_too_long:
+            assert self.doc_1_id not in search_func(word, 0)
+            assert self.doc_1_id not in search_func(word, 1)
+            assert self.doc_1_id not in search_func(word, 2)
+
+        for word in self.levshtein_dist_1_too_short:
             assert self.doc_1_id not in search_func(word, 0)
             assert self.doc_1_id not in search_func(word, 1)
             assert self.doc_1_id not in search_func(word, 2)
@@ -64,6 +71,25 @@ class TestTrie(unittest.TestCase):
 
     def test_levenshtein_distance(self):
         self._common_exact_search(self.trie.levenshtein_search)
+        self._common_hamming_search(self.trie.levshetin_search)
+
+        for word in self.levshtein_dist_1_too_long:
+            assert self.doc_1_id not in self.trie.levshetin_search(word, 0)
+            assert self.doc_1_id in self.trie.levshetin_search(word, 1)
+            assert self.doc_1_id in self.trie.levshetin_search(word, 2)
+
+        for word in self.levshtein_dist_1_too_short:
+            assert self.doc_1_id not in self.trie.levshetin_search(word, 0)
+            assert self.doc_1_id in self.trie.levshetin_search(word, 1)
+            assert self.doc_1_id in self.trie.levshetin_search(word, 2)
+
+        # now we test for words that will match multiple documents but in different nodes.
+        self.trie.insert("a", self.doc_1_id)
+        self.trie.insert("b", self.doc_2_id)
+
+        assert self.doc_1_id in self.trie.levshetin_search("ab", 1)
+        assert self.doc_2_id in self.trie.levshetin_search("ab", 1)
+
 
 if __name__ == '__main__':
     unittest.main()
