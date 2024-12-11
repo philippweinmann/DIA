@@ -85,6 +85,7 @@ class TestTrie(unittest.TestCase):
 
         for word in self.levshtein_dist_1_too_long:
             self._verbose_assert(search_func, self.doc_1_id, word, False, 0)
+            print(word)
             self._verbose_assert(search_func, self.doc_1_id, word, True, 1)
             self._verbose_assert(search_func, self.doc_1_id, word, True, 2)
 

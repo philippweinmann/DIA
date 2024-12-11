@@ -94,8 +94,8 @@ class Trie:
                 else:
                     # TODO definitely need multithreading here
 
-                    # Deletion (skip current character in trie)
-                    current_results = dfs(child, current_word + char, current_distance + 1)
+                    # Deletion (skip current character in trie), stay in the same node!
+                    current_results = dfs(node, current_word + char, current_distance + 1)
                     if current_results:
                         doc_matches.update(current_results)
 
