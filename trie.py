@@ -12,6 +12,7 @@ class TrieNode:
 class Trie:    
     def __init__(self):
         self.root = TrieNode()
+        self.empty_set = set() # so that it only gets instantiated once.
     
     def insert(self, word: str, doc_id) -> None:
         current = self.root
@@ -25,36 +26,39 @@ class Trie:
         for letter in word:
             current = current.children.get(letter)
             if current is None:
-                # todo think about not instantiating a new set here
-                return set()
+                return self.empty_set
         return current.doc_ids
     
-    def hamming_search(self, word:str, max_dist:int) -> bool:
+    # todo maybe switch back to exact search if max_dist is 0?
+    def hamming_search(self, word:str, max_dist:int = 0) -> bool:
+        doc_matches = set()
         def dfs(node, current_word, current_distance):
-            # print(f"Visiting node: {current_word}, current_distance: {current_distance}")
+            print(f"Visiting node: {current_word}, current_distance: {current_distance}")
             if current_distance > max_dist:
-                return False
+                return self.empty_set
             
             if node.is_end:
                 if len(current_word) == len(word) and current_distance <= max_dist:
-                    # print(f"Found word: {current_word} with distance: {current_distance}")
-                    return True
+                    print(f"Found word: {current_word} with distance: {current_distance}")
+                    return node.doc_ids
 
             if len(current_word) >= len(word):
-                return False
+                return self.empty_set
             
             for char, child in node.children.items():
                 next_letter_matches = (char == word[len(current_word)])
                 new_distance = current_distance + (1 if not next_letter_matches else 0)
 
-                if dfs(child, current_word + char, new_distance):
-                    return True
+                current_results = dfs(child, current_word + char, new_distance)
+                if current_results:
+                    doc_matches.update(current_results)
                 
-            return False
+            return doc_matches
         
         return dfs(self.root, "", 0)
     
-    def levshetin_search(self, word:str, max_dist:int) -> bool:
+    # todo maybe switch back to exact search if max_dist is 0?
+    def levshetin_search(self, word:str, max_dist:int = 0) -> bool:
         def dfs(node, current_word, current_distance):
             # print(f"Visiting node: {current_word}, current_distance: {current_distance}")
             if current_distance > max_dist:

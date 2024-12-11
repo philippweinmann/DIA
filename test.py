@@ -18,39 +18,55 @@ class TestTrie(unittest.TestCase):
         self.trie.insert(self.in_both_docs, self.doc_1_id)
         self.trie.insert(self.in_both_docs, self.doc_2_id)
 
+    def _common_exact_search(self, search_func):
+        # this should work for exact_search, hamming_search, and levshetin_search
+        assert self.doc_1_id not in search_func(self.in_neither_string)
+        assert self.doc_2_id not in search_func(self.in_neither_string)
+
+        assert self.doc_1_id in search_func(self.only_in_doc_1)
+        assert self.doc_2_id not in search_func(self.only_in_doc_1)
+
+        assert self.doc_1_id not in search_func(self.only_in_doc_2)
+        assert self.doc_2_id in search_func(self.only_in_doc_2)
+
+        assert self.doc_1_id in search_func(self.in_both_docs)
+        assert self.doc_2_id in search_func(self.in_both_docs)
+
     def test_exact_match(self):
-        assert self.doc_1_id not in self.trie.exact_search(self.in_neither_string)
-        assert self.doc_2_id not in self.trie.exact_search(self.in_neither_string)
-
-        assert self.doc_1_id in self.trie.exact_search(self.only_in_doc_1)
-        assert self.doc_2_id not in self.trie.exact_search(self.only_in_doc_1)
-
-        assert self.doc_1_id not in self.trie.exact_search(self.only_in_doc_2)
-        assert self.doc_2_id in self.trie.exact_search(self.only_in_doc_2)
-
-        assert self.doc_1_id in self.trie.exact_search(self.in_both_docs)
-        assert self.doc_2_id in self.trie.exact_search(self.in_both_docs)
+        self._common_exact_search(self.trie.exact_search)
 
     def test_hamming_distance(self):
-        assert self.trie.hamming_search("apple", 0) == True
-        assert self.trie.hamming_search("apple", 1) == True
+        self._common_exact_search(self.trie.hamming_search)
 
-        assert self.trie.hamming_search("applr", 0) == False
-        assert self.trie.hamming_search("applr", 1) == True
-        assert self.trie.hamming_search("applr", 2) == True
+        # let's add some strings for hamming tests
+        self.hamm_dist_1 = ["applr", "rpple", "apble"]
+        self.hamm_dist_2 = ["apprr", "rprle", "rpble"]
+        self.too_long_dist_1 = ["appler", "rapple", "apbple"]
+        
+        for word in self.hamm_dist_1:
+            assert self.doc_1_id not in self.trie.hamming_search(word, 0)
+            assert self.doc_1_id in self.trie.hamming_search(word, 1)
+            assert self.doc_1_id in self.trie.hamming_search(word, 2)
+
+        for word in self.hamm_dist_2:
+            assert self.doc_1_id not in self.trie.hamming_search(word, 0)
+            assert self.doc_1_id not in self.trie.hamming_search(word, 1)
+            assert self.doc_1_id in self.trie.hamming_search(word, 2)
+            assert self.doc_1_id in self.trie.hamming_search(word, 3)
+
+        for word in self.too_long_dist_1:
+            assert self.doc_1_id not in self.trie.hamming_search(word, 0)
+            assert self.doc_1_id not in self.trie.hamming_search(word, 1)
+            assert self.doc_1_id not in self.trie.hamming_search(word, 2)
+
 
     def test_levenshtein_distance(self):
-        assert self.trie.levshetin_search("apple", 0) == True
-        assert self.trie.levshetin_search("apple", 1) == True
-        assert self.trie.levshetin_search("applr", 0) == False
-        assert self.trie.levshetin_search("applr", 1) == True
-        assert self.trie.levshetin_search("applr", 2) == True
-
-        assert self.trie.levshetin_search("appl", 1) == True
-
-        assert self.trie.levshetin_search("appl", 0) == False
-        assert self.trie.levshetin_search("rppl", 2) == True
-        assert self.trie.levshetin_search("rppl", 3) == True
+        self._common_exact_search(self.trie.levenshtein_search)
 
 if __name__ == '__main__':
     unittest.main()
+
+# %%
+x = set()
+bool(x)
+# %%
