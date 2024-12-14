@@ -52,13 +52,12 @@ def input_query_in_trie(trie, query_id, query_type, query_dist, query_words):
 import pygtrie
 from lorem_text import lorem
 
-t = pygtrie.StringTrie()
+t = pygtrie.CharTrie()
 
 query_1 = (1, 1, 2, ["hello", "world"])
 query_2 = (2, 1, 3, ["hello", "cruel"])
 
 input_query_in_trie(t, *query_1)
 input_query_in_trie(t, *query_2)
-# %%
-t["hello"]
-# %%
+
+# use t.get(word, None) to get the list of queries
