@@ -43,10 +43,11 @@ def get_trie_inputs(query_id, query_type, query_dist, query_words):
 def input_query_in_trie(trie, query_id, query_type, query_dist, query_words):
     query_inputs = get_trie_inputs(query_id, query_type, query_dist, query_words)
     for word, query_info in query_inputs:
-        if trie.has_key(word):
-            trie[word].append(query_info)
-        else:
+        value = trie.get(word, None)
+        if not value:
             trie[word] = [query_info]
+        else:
+            value.append(query_info)
 
 # %%
 import pygtrie
