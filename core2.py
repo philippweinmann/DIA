@@ -1,7 +1,9 @@
 from enum import Enum
 import functools
 from rapidfuzz.distance import Hamming, Levenshtein
-from trie import Trie
+import pygtrie
+
+from trie_utils import input_query_in_trie
 
 
 class ErrorCode(Enum):
@@ -18,15 +20,17 @@ class MatchType(Enum):
 
 queries = {}  # Stores active queries
 results = []  # Stores matched results for retrieval
+t = pygtrie.CharTrie() # global chartrie for all queries
 
 # Initialize the indexing system
 def initialize_index():
     """
     Clears all queries and results to initialize the indexing system.
     """
-    global queries, results
+    global queries, results, t
     queries.clear()
     results.clear()
+    t = pygtrie.CharTrie()
 
 
 def destroy_index():
@@ -43,12 +47,16 @@ def start_query(query_id, terms, match_type, match_dist):
     if query_id in queries:
         return ErrorCode.EC_FAIL  # Query ID already exists
 
+    terms = terms.split()
     # Store query information
     queries[query_id] = {
-        'terms': terms.split(),
+        'terms': terms,
         'match_type': MatchType(match_type),
         'match_dist': match_dist
     }
+
+    # Insert query into trie
+    input_query_in_trie(t, query_id, match_type, match_dist, terms)
     return ErrorCode.EC_SUCCESS
 
 
