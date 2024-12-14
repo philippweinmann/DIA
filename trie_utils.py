@@ -62,3 +62,13 @@ input_query_in_trie(t, *query_1)
 input_query_in_trie(t, *query_2)
 
 # use t.get(word, None) to get the list of queries
+
+# %%
+def delete_query_from_trie(trie, query_id, query_dict):
+    query_keys = query_dict[query_id]
+    for word in query_keys:
+        value = trie.get(word, None)
+        if value:
+            value.remove(query_id)
+            if not value:
+                del trie[word]
