@@ -92,6 +92,14 @@ def find_word_in_trie(trie, word, mask):
             
     return matching_queries
 
+def find_document_matches(trie, doc_words):
+    doc_matches = set()
+    for word in doc_words:
+        word_mask_tuples = get_deletions_for_document([word], max_dist=0)
+        for _, mask in word_mask_tuples:
+            doc_matches.update(find_word_in_trie(trie, word, mask))
+    return doc_matches
+
 # %%
 # %%
 import pygtrie

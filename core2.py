@@ -3,7 +3,7 @@ import functools
 from rapidfuzz.distance import Hamming, Levenshtein
 import pygtrie
 
-from trie_utils import input_query_in_trie, delete_query_from_trie
+from trie_utils import input_query_in_trie, delete_query_from_trie, find_document_matches
 
 
 class ErrorCode(Enum):
@@ -91,6 +91,10 @@ def match_document(doc_id, content):
         results.append((doc_id, matched_queries))
         # print(f"Document {doc_id} matched with queries: {matched_queries}")
     # print(f"Results list after matching document {doc_id}: {results}")
+    
+    trie_matches = list(find_document_matches(t, content.split()))
+    print(f"Trie matches for document    {doc_id}: {trie_matches}")
+    print(f"Matched queries for document {doc_id}: {matched_queries}")
     return ErrorCode.EC_SUCCESS
 
 
