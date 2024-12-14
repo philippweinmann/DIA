@@ -1,5 +1,11 @@
 # %%
 import itertools
+from enum import Enum
+
+class MatchType(Enum):
+    EXACT = 0
+    EDIT = 2
+    HAMMING = 1
 
 # add caching!
 # %%
@@ -50,6 +56,44 @@ def input_query_in_trie(trie, query_id, query_type, query_dist, query_words):
             value.append(query_info)
 
 # %%
+def delete_query_from_trie(trie, query_id, query_dict):
+    query_keys = query_dict[query_id]
+    for word in query_keys:
+        value = trie.get(word, None)
+        if value:
+            value.remove(query_id)
+            if not value:
+                del trie[word]
+# %%
+def find_word_in_trie(trie, word, mask):
+    query_infos = trie.get(word, None)
+
+    if not query_infos:
+        return []
+    
+    matching_queries = set()
+    for query_info in query_infos:
+        query_id, query_type, query_dist, query_mask = query_info
+
+        match MatchType(query_type):
+            case MatchType.EXACT:
+                if mask.count(1) != 0:
+                    continue
+                if mask == query_mask:
+                    matching_queries.add(query_id)
+            case MatchType.HAMMING:
+                if mask != query_mask:
+                    continue
+                if mask.count(1) <= query_dist:
+                    matching_queries.add(query_id)
+            case MatchType.EDIT:
+                if mask.count(1) <= query_dist:
+                    matching_queries.add(query_id)
+            
+    return matching_queries
+
+# %%
+# %%
 import pygtrie
 from lorem_text import lorem
 
@@ -63,12 +107,7 @@ input_query_in_trie(t, *query_2)
 
 # use t.get(word, None) to get the list of queries
 
+
 # %%
-def delete_query_from_trie(trie, query_id, query_dict):
-    query_keys = query_dict[query_id]
-    for word in query_keys:
-        value = trie.get(word, None)
-        if value:
-            value.remove(query_id)
-            if not value:
-                del trie[word]
+find_word_in_trie(t, "hello", (0, 0, 0, 0, 0))
+# %%
