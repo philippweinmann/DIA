@@ -14,13 +14,7 @@ def generate_combinations(array_length, max_ones):
                 array[index] = 1
             result.add(tuple(array))
     return result
-
-# Example usage
-array_length = 4
-max_ones = 3
-combinations = generate_combinations(array_length, max_ones)
-
-print(generate_combinations(2, max_ones))
+# %
 
 def get_deletion(word, mask):
     return "".join([letter for letter, keep in zip(word, mask) if keep == 0])
@@ -35,31 +29,6 @@ def get_deletions_for_document(words, max_dist):
     
     return word_mask_tuples
 
-
-document = "my".split()
-
-print(len(get_deletions_for_document(document, max_dist=3)))
-
-# %%
-import pygtrie
-
-t = pygtrie.StringTrie()
-
-query_id = 1
-query_type = 2
-query_dist = 3
-query_words = ["hello"]
-
-# example tuple to be inserted:
-first_word = query_words[0]
-query_word_tuple = (query_id, query_type, query_dist, tuple([0] * len(first_word)))
-
-t[first_word] = query_word_tuple
-# %%
-print(t)
-# %%
-mask_word_tuples = get_deletions_for_document(query_words)
-print(mask_word_tuples)
 # %%
 def get_trie_inputs(query_id, query_type, query_dist, query_words):
     trie_inputs = []
@@ -70,11 +39,6 @@ def get_trie_inputs(query_id, query_type, query_dist, query_words):
             trie_inputs.append((word, (query_id, query_type, query_dist, mask)))
     return trie_inputs
 
-trie_inputs = get_trie_inputs(query_id, query_type, query_dist, query_words)
+# I'll just assime this works
 # %%
 
-for trie_input in trie_inputs:
-    word, query_word_tuple = trie_input
-    t[word] = query_word_tuple
-# %%
-t["hello"]
