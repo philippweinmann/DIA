@@ -33,12 +33,32 @@ def get_deletions_for_document(words, max_dist):
 def get_trie_inputs(query_id, query_type, query_dist, query_words):
     trie_inputs = []
 
-    for dist in range(1, query_dist + 1):
-        mask_word_tuples = get_deletions_for_document(query_words, max_dist=dist)
-        for word, mask in mask_word_tuples:
-            trie_inputs.append((word, (query_id, query_type, query_dist, mask)))
+    word_tuples = get_deletions_for_document(query_words, max_dist=query_dist)
+    for word, mask in word_tuples:
+        trie_inputs.append((word, (query_id, query_type, query_dist, mask)))
     return trie_inputs
 
 # I'll just assime this works
 # %%
+def input_query_in_trie(trie, query_id, query_type, query_dist, query_words):
+    query_inputs = get_trie_inputs(query_id, query_type, query_dist, query_words)
+    for word, query_info in query_inputs:
+        if trie.has_key(word):
+            trie[word].append(query_info)
+        else:
+            trie[word] = [query_info]
 
+# %%
+import pygtrie
+from lorem_text import lorem
+
+t = pygtrie.StringTrie()
+
+query_1 = (1, 1, 2, ["hello", "world"])
+query_2 = (2, 1, 3, ["hello", "cruel"])
+
+input_query_in_trie(t, *query_1)
+input_query_in_trie(t, *query_2)
+# %%
+t["hello"]
+# %%
