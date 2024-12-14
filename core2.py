@@ -64,12 +64,13 @@ def end_query(query_id):
     """
     Ends a query by removing it from the active query list.
     """
+    # Remove query from trie
+    delete_query_from_trie(t, query_id, queries[query_id])
+    
     if query_id not in queries:
         return ErrorCode.EC_FAIL
     del queries[query_id]
-
-    # Remove query from trie
-    delete_query_from_trie(t, query_id, queries[query_id])
+    
     return ErrorCode.EC_SUCCESS
 
 

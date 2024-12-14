@@ -56,8 +56,7 @@ def input_query_in_trie(trie, query_id, query_type, query_dist, query_words):
             value.append(query_info)
 
 # %%
-def delete_query_from_trie(trie, query_id, query_dict):
-    query_keys = query_dict[query_id]
+def delete_query_from_trie(trie, query_id, query_keys):
     for word in query_keys:
         value = trie.get(word, None)
         if value:
