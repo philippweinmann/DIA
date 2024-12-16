@@ -141,12 +141,6 @@ class TestTrie(unittest.TestCase):
         matches = find_document_matches(self.trie, doc_contents)
         assert matches == set()
 
-        # doc_3:
-        doc_id, doc_word_length, doc_contents = 3, 1, ['hellox']
-
-        matches = find_document_matches(self.trie, doc_contents)
-        assert matches == set()
-
         # multiple docs
         doc_id, doc_word_length, doc_contents = 4, 1, ['hello']
         matches = find_document_matches(self.trie, doc_contents)
@@ -155,6 +149,26 @@ class TestTrie(unittest.TestCase):
 
     def test_match_document_exact(self):
         self._combined_exact_search(0)
+
+        self.trie.clear()
+        query_type = 0
+        query_distance = 0
+        
+        # query_1:
+        query_words_1 = ['hello', "world"]
+        query_id_1, query_type_1, query_dist_1, query_words_1 = 1, query_type, query_distance, query_words_1
+        input_query_in_trie(self.trie, query_id_1, query_type_1, query_dist_1, query_words_1)
+
+        # query_2:
+        query_words_2 = ['hello', "couchie"]
+        query_id_2, query_type_2, query_dist_2, query_words_2 = 2, query_type, query_distance, query_words_2
+        input_query_in_trie(self.trie, query_id_2, query_type_2, query_dist_2, query_words_2)
+        
+        # doc_1:
+        doc_id, doc_word_length, doc_contents = 1, 1, ['hellox']
+        matches = find_document_matches(self.trie, doc_contents)
+
+        assert matches == set()
 
     def test_match_hamming(self):
         self._combined_exact_search(1)
@@ -339,14 +353,17 @@ class TestTrie(unittest.TestCase):
 
         assert matches == {query_id_2}
 
-        # doc_3:
-        doc_id, doc_word_length, doc_contents = 3, 1, ['hell']
+        # doc_4:
+        doc_id, doc_word_length, doc_contents = 4, 1, ['helox']
         matches = find_document_matches(self.trie, doc_contents)
 
         assert matches == {query_id_1, query_id_2}
 
-        # doc_4:
-        doc_id, doc_word_length, doc_contents = 4, 1, ['helox']
+        # let's start deleting or adding chars let's be really simple
+
+        lev_distance = 1
+        # doc_3:
+        doc_id, doc_word_length, doc_contents = 3, 1, ['hell']
         matches = find_document_matches(self.trie, doc_contents)
 
         assert matches == {query_id_1, query_id_2}
@@ -363,6 +380,13 @@ class TestTrie(unittest.TestCase):
 
         print(f"matches: {matches}")
         assert matches == set()
+
+        lev_distance = 2
+        # query_3:
+        query_words_3 = ['hello', "world"]
+        query_id_3, query_type_3, query_dist_3, query_words_3 = 3, 2, lev_distance, query_words_3
+        input_query_in_trie(self.trie, query_id_3, query_type_3, query_dist_3, query_words_3)
+
 
 
 if __name__ == '__main__':

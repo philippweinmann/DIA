@@ -69,6 +69,24 @@ def delete_query_from_trie(trie, query_id, query_keys):
             if not value:
                 del trie[word]
 # %%
+def pad_bitarrays(doc_mask: bitarray, query_mask: bitarray):
+    padded_doc_mask = bitarray()
+    padded_query_mask = bitarray()
+    
+    # Iterate through the bitarrays, extending the result bitarrays as needed
+    for bit_a, bit_b in zip(doc_mask, query_mask):
+        if bit_a == 1 and bit_b == 0:
+            padded_doc_mask.extend([0, 1])
+            padded_query_mask.extend([0, 0])
+        elif bit_b == 1 and bit_a == 0:
+            padded_doc_mask.extend([0, 0])
+            padded_query_mask.extend([0, 1])
+        else:
+            padded_doc_mask.append(bit_a)
+            padded_query_mask.append(bit_b)
+    
+    return padded_doc_mask, padded_query_mask
+
 def find_word_in_trie(trie, word, mask):
     query_infos = trie.get(word, None)
     mask = bitarray(mask)
@@ -109,6 +127,16 @@ def find_word_in_trie(trie, word, mask):
                     matching_queries.add(query_id)
                 
                 '''
+                padded_doc_mask, padded_query_mask = pad_bitarrays(mask, query_mask)
+                
+                # I believe they should always have the same length
+                assert len(padded_doc_mask) == len(padded_query_mask)
+                # nand counter for the two bitarrays
+                lev_dist = (padded_doc_mask | padded_query_mask).count(1)
+
+                # this needs to be the last check
+                if lev_dist <= query_dist:
+                    matching_queries.add(query_id)
             
     return matching_queries
 
