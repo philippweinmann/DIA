@@ -199,7 +199,18 @@ class TestTrie(unittest.TestCase):
         matches = find_document_matches(self.trie, doc_contents)
         assert matches == {query_id_2}
 
-        
+        # doc_6:
+        doc_id, doc_word_length, doc_contents = 6, 1, ['couchie', 'hello']
+        matches = find_document_matches(self.trie, doc_contents)
+
+        print(f"matches: {matches}")
+        assert matches == {query_id_1, query_id_2}
+
+        # doc_7:
+        doc_id, doc_word_length, doc_contents = 7, 1, ['couxhie', 'helxx']
+        matches = find_document_matches(self.trie, doc_contents)
+
+        assert matches == {query_id_2}
 
 if __name__ == '__main__':
     unittest.main()
