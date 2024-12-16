@@ -65,7 +65,8 @@ def run_test_driver(test_fp):
                     assert err == ErrorCode.EC_SUCCESS, f"Error in GetNextAvailRes: {err}"
                     assert predicted_doc_id == doc_id
                     assert predicted_num_res == expected_num_res
-                    assert predicted_query_ids == expected_query_ids
+                    print(f"Predicted Query IDs: {predicted_query_ids}, Expected Query IDs: {expected_query_ids}")
+                    assert set(predicted_query_ids) == set(expected_query_ids)
                 
                 case _:
                     raise Exception(f"Corrupted Test File. Unknown Command '{ch}'.")

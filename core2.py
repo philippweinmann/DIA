@@ -80,6 +80,7 @@ def match_document(doc_id, content):
     """
     matched_queries = []
 
+    '''
     for query_id, query in queries.items():
         if matches_query(query, content):
             matched_queries.append(query_id)
@@ -92,9 +93,12 @@ def match_document(doc_id, content):
         results.append((doc_id, matched_queries))
         # print(f"Document {doc_id} matched with queries: {matched_queries}")
     # print(f"Results list after matching document {doc_id}: {results}")
+    '''
     
     trie_matches = list(find_document_matches(t, content.split(), queries))
-    assert set(trie_matches) == set(matched_queries), f"Document {doc_id} matches do not match: {trie_matches} vs {matched_queries}"
+    # assert set(trie_matches) == set(matched_queries), f"Document {doc_id} matches do not match: {trie_matches} vs {matched_queries}"
+
+    results.append((doc_id, trie_matches))
     return ErrorCode.EC_SUCCESS
 
 

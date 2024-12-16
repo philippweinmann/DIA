@@ -66,8 +66,8 @@ def delete_query_from_trie(trie, query_id, query_keys):
         value = trie.get(word, None)
         if value:
             value.remove(query_id)
-            if not value:
-                del trie[word]
+        elif not value:
+            del trie[word]
 # %%
 
 def pad_bitarrays(doc_mask, query_mask):
