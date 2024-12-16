@@ -69,22 +69,31 @@ def delete_query_from_trie(trie, query_id, query_keys):
             if not value:
                 del trie[word]
 # %%
-def pad_bitarrays(doc_mask: bitarray, query_mask: bitarray):
-    padded_doc_mask = bitarray()
-    padded_query_mask = bitarray()
-    
-    # Iterate through the bitarrays, extending the result bitarrays as needed
-    for bit_a, bit_b in zip(doc_mask, query_mask):
-        if bit_a == 1 and bit_b == 0:
-            padded_doc_mask.extend([0, 1])
-            padded_query_mask.extend([0, 0])
-        elif bit_b == 1 and bit_a == 0:
-            padded_doc_mask.extend([0, 0])
-            padded_query_mask.extend([0, 1])
-        else:
-            padded_doc_mask.append(bit_a)
-            padded_query_mask.append(bit_b)
-    
+
+def pad_bitarrays(doc_mask, query_mask):
+    """
+    Pad the shorter mask with 0 (False) bits so that doc_mask and query_mask 
+    end up having the same length. Return (padded_doc_mask, padded_query_mask).
+    """
+    doc_len_diff = len(doc_mask) - len(query_mask)
+
+    if doc_len_diff > 0:
+        # doc_mask is longer; pad query_mask
+        zero_bits = bitarray(doc_len_diff)
+        zero_bits.setall(False)
+        padded_doc_mask = doc_mask
+        padded_query_mask = zero_bits + query_mask
+    elif doc_len_diff < 0:
+        # query_mask is longer; pad doc_mask
+        zero_bits = bitarray(-doc_len_diff)
+        zero_bits.setall(False)
+        padded_doc_mask = zero_bits + doc_mask
+        padded_query_mask = query_mask
+    else:
+        # They are already equal length
+        padded_doc_mask = doc_mask
+        padded_query_mask = query_mask
+
     return padded_doc_mask, padded_query_mask
 
 def find_word_in_trie(trie, word, mask):

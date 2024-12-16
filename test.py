@@ -90,8 +90,11 @@ class TestTrie(unittest.TestCase):
         bitarray_2 = bitarray('00100')
 
         padded_bitarray_1, padded_bitarray_2 = pad_bitarrays(bitarray_1, bitarray_2)
-        expected_bitarray_1 = bitarray('0000011')
-        expected_bitarray_2 = bitarray('0010000')
+        expected_bitarray_1 = bitarray('000011')
+        expected_bitarray_2 = bitarray('000100')
+
+        print(f"padded_bitarray_1: {padded_bitarray_1}")
+        print(f"padded_bitarray_2: {padded_bitarray_2}")
 
         assert padded_bitarray_1 == expected_bitarray_1
         assert padded_bitarray_2 == expected_bitarray_2
