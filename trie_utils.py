@@ -33,10 +33,10 @@ def get_deletion(word, mask):
 # %%
 def get_deletions_for_document(words, max_dist):
     word_mask_tuples = set()
-    for word in words:
-        combinations = generate_combinations(len(word), max_dist)
+    for original_word in words:
+        combinations = generate_combinations(len(original_word), max_dist)
         for mask in combinations:
-            word_mask_tuples.add((get_deletion(word, mask), mask))
+            word_mask_tuples.add((get_deletion(original_word, mask), mask, original_word))
     
     return word_mask_tuples
 
@@ -45,7 +45,7 @@ def get_trie_inputs(query_id, query_type, query_dist, query_words):
     trie_inputs = []
 
     word_tuples = get_deletions_for_document(query_words, max_dist=query_dist)
-    for word, mask in word_tuples:
+    for word, mask, original_word in word_tuples:
         trie_inputs.append((word, (query_id, query_type, query_dist, mask)))
     return trie_inputs
 
@@ -146,7 +146,7 @@ def find_document_matches(trie, doc_words):
     doc_matches = set()
     for original_word in doc_words:
         word_mask_tuples = get_deletions_for_document([original_word], max_dist=3)
-        for deleted_word_comb, mask in word_mask_tuples:
+        for deleted_word_comb, mask, original_word in word_mask_tuples:
             doc_matches.update(find_word_in_trie(trie, deleted_word_comb, mask))
     return doc_matches
 
