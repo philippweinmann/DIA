@@ -76,6 +76,6 @@ def run_test_driver(test_fp):
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO) # Change to logging.DEBUG for more detailed
 
-    file_path = "./data/small_test.txt"
-    # file_path = "./data/super_small_test.txt"
+    # file_path = "./data/small_test.txt"
+    file_path = "./data/super_small_test.txt"
     run_test_driver(file_path)

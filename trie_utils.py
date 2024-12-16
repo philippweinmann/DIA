@@ -100,21 +100,3 @@ def find_document_matches(trie, doc_words):
     return doc_matches
 
 # %%
-# %%
-import pygtrie
-from lorem_text import lorem
-
-t = pygtrie.CharTrie()
-
-query_1 = (1, 1, 2, ["hello", "world"])
-query_2 = (2, 1, 3, ["hello", "cruel"])
-
-input_query_in_trie(t, *query_1)
-input_query_in_trie(t, *query_2)
-
-# use t.get(word, None) to get the list of queries
-
-
-# %%
-find_word_in_trie(t, "hello", (0, 0, 0, 0, 0))
-# %%
