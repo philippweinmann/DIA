@@ -158,7 +158,47 @@ class TestTrie(unittest.TestCase):
 
     def test_match_hamming(self):
         self._combined_exact_search(1)
-        
+
+        self.trie.clear()
+
+        hamming_distance = 1
+        # let's try some basic hamming distance tests
+        # query_1:
+        query_words_1 = ['hello', "world"]
+        query_id_1, query_type_1, query_dist_1, query_words_1 = 1, 1, hamming_distance, query_words_1
+        input_query_in_trie(self.trie, query_id_1, query_type_1, query_dist_1, query_words_1)
+
+        # query_2:
+        query_words_2 = ['hello', "couchie"]
+        query_id_2, query_type_2, query_dist_2, query_words_2 = 2, 1, hamming_distance, query_words_2
+        input_query_in_trie(self.trie, query_id_2, query_type_2, query_dist_2, query_words_2)
+
+        # doc_1:
+        doc_id, doc_word_length, doc_contents = 1, 1, ['hello']
+        matches = find_document_matches(self.trie, doc_contents)
+        assert matches == {query_id_1, query_id_2}
+
+        # doc_2:
+        doc_id, doc_word_length, doc_contents = 2, 1, ['hell']
+        matches = find_document_matches(self.trie, doc_contents)
+        assert matches == set()
+
+        # doc_3:
+        doc_id, doc_word_length, doc_contents = 3, 1, ['hellox']
+        matches = find_document_matches(self.trie, doc_contents)
+
+        assert matches == set()
+
+        # doc_4:
+        doc_id, doc_word_length, doc_contents = 4, 1, ['hxllo']
+        matches = find_document_matches(self.trie, doc_contents)
+        assert matches == {query_id_1, query_id_2}
+
+        # doc_5:
+        doc_id, doc_word_length, doc_contents = 5, 1, ['couchix']
+        matches = find_document_matches(self.trie, doc_contents)
+        assert matches == {query_id_2}
+
         
 
 if __name__ == '__main__':

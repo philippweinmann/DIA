@@ -92,11 +92,13 @@ def find_word_in_trie(trie, word, mask):
     return matching_queries
 
 def find_document_matches(trie, doc_words):
+    # max distance is 3
+
     doc_matches = set()
-    for word in doc_words:
-        word_mask_tuples = get_deletions_for_document([word], max_dist=0)
-        for _, mask in word_mask_tuples:
-            doc_matches.update(find_word_in_trie(trie, word, mask))
+    for original_word in doc_words:
+        word_mask_tuples = get_deletions_for_document([original_word], max_dist=3)
+        for deleted_word_comb, mask in word_mask_tuples:
+            doc_matches.update(find_word_in_trie(trie, deleted_word_comb, mask))
     return doc_matches
 
 # %%
