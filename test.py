@@ -278,5 +278,41 @@ class TestTrie(unittest.TestCase):
 
         assert matches == {query_id_1, query_id_2}
 
+        # doc_4:
+        doc_id, doc_word_length, doc_contents = 4, 1, ['hellox']
+        matches = find_document_matches(self.trie, doc_contents)
+
+        assert matches == {query_id_1, query_id_2}
+
+        # doc_4:
+        doc_id, doc_word_length, doc_contents = 4, 1, ['helxlo']
+        matches = find_document_matches(self.trie, doc_contents)
+
+        assert matches == {query_id_1, query_id_2}
+
+        # doc_5:
+        doc_id, doc_word_length, doc_contents = 5, 1, ['couchi']
+        matches = find_document_matches(self.trie, doc_contents)
+
+        assert matches == {query_id_2}
+
+        # doc_6:
+        doc_id, doc_word_length, doc_contents = 6, 1, ['couchix']
+        matches = find_document_matches(self.trie, doc_contents)
+
+        assert matches == {query_id_2}
+
+        # doc_7:
+        doc_id, doc_word_length, doc_contents = 7, 1, ['coucxhie']
+        matches = find_document_matches(self.trie, doc_contents)
+
+        assert matches == {query_id_2}
+
+        # doc_8:
+        doc_id, doc_word_length, doc_contents = 7, 1, ['couxhie']
+        matches = find_document_matches(self.trie, doc_contents)
+
+        assert matches == {query_id_2}
+
 if __name__ == '__main__':
     unittest.main()
