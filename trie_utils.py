@@ -46,7 +46,7 @@ def get_trie_inputs(query_id, query_type, query_dist, query_words):
 
     word_tuples = get_deletions_for_document(query_words, max_dist=query_dist)
     for word, mask, original_word in word_tuples:
-        trie_inputs.append((word, (query_id, query_type, query_dist, mask)))
+        trie_inputs.append((word, (query_id, query_type, query_dist, mask, original_word)))
     return trie_inputs
 
 # I'll just assime this works
@@ -96,7 +96,7 @@ def find_word_in_trie(trie, word, mask):
     
     matching_queries = set()
     for query_info in query_infos:
-        query_id, query_type, query_dist, query_mask = query_info
+        query_id, query_type, query_dist, query_mask, original_word = query_info
         query_mask = bitarray(query_mask)
 
         match MatchType(query_type):
@@ -104,12 +104,12 @@ def find_word_in_trie(trie, word, mask):
                 if mask.count(1) != 0:
                     continue
                 if mask == query_mask:
-                    matching_queries.add(query_id)
+                    matching_queries.add(query_id, original_word)
             case MatchType.HAMMING:
                 if mask != query_mask:
                     continue
                 if mask.count(1) <= query_dist:
-                    matching_queries.add(query_id)
+                    matching_queries.add(query_id, original_word)
             case MatchType.EDIT:
                 '''
                 # compare mask lengths and pad at the start to make them equal
@@ -136,7 +136,7 @@ def find_word_in_trie(trie, word, mask):
 
                 # this needs to be the last check
                 if lev_dist <= query_dist:
-                    matching_queries.add(query_id)
+                    matching_queries.add(query_id, original_word)
             
     return matching_queries
 
@@ -147,7 +147,11 @@ def find_document_matches(trie, doc_words):
     for original_word in doc_words:
         word_mask_tuples = get_deletions_for_document([original_word], max_dist=3)
         for deleted_word_comb, mask, original_word in word_mask_tuples:
+            found_query_id, query_word = find_word_in_trie(trie, deleted_word_comb, mask)
+            # here we need to check if allwords in query have been found.
             doc_matches.update(find_word_in_trie(trie, deleted_word_comb, mask))
+    
+
     return doc_matches
 
 # %%
