@@ -1,6 +1,7 @@
 # %%
 import itertools
 from enum import Enum
+from bitarray import bitarray
 
 class MatchType(Enum):
     EXACT = 0
@@ -9,20 +10,24 @@ class MatchType(Enum):
 
 # add caching!
 # %%
+
 def generate_combinations(array_length, max_ones):
     result = set()
-    # manually add the all-zero mask
-    result.add(tuple([0] * array_length))
+    # Add the all-zero mask as a string
+    result.add("0" * array_length)
     for num_ones in range(1, max_ones + 1):
         for indices in itertools.combinations(range(array_length), num_ones):
-            array = [0] * array_length
+            bitar = ["0"] * array_length
             for index in indices:
-                array[index] = 1
-            result.add(tuple(array))
+                bitar[index] = "1"
+            # Add the string representation of the bitarray
+            result.add("".join(bitar))
     return result
+
 # %
 
 def get_deletion(word, mask):
+    mask = bitarray(mask)
     return "".join([letter for letter, keep in zip(word, mask) if keep == 0])
 
 # %%
@@ -66,6 +71,7 @@ def delete_query_from_trie(trie, query_id, query_keys):
 # %%
 def find_word_in_trie(trie, word, mask):
     query_infos = trie.get(word, None)
+    mask = bitarray(mask)
 
     if not query_infos:
         return []
@@ -73,6 +79,7 @@ def find_word_in_trie(trie, word, mask):
     matching_queries = set()
     for query_info in query_infos:
         query_id, query_type, query_dist, query_mask = query_info
+        query_mask = bitarray(query_mask)
 
         match MatchType(query_type):
             case MatchType.EXACT:
@@ -86,8 +93,22 @@ def find_word_in_trie(trie, word, mask):
                 if mask.count(1) <= query_dist:
                     matching_queries.add(query_id)
             case MatchType.EDIT:
-                if mask.count(1) <= query_dist:
+                '''
+                # compare mask lengths and pad at the start to make them equal
+                mask_len_diff = len(mask) - len(query_mask)
+
+                if mask_len_diff > 0:
+                    query_mask = [0] * mask_len_diff + query_mask
+                elif mask_len_diff < 0:
+                    mask = [0] * abs(mask_len_diff) + mask
+                
+                # count amount of 1s as nand of the two masks
+                lev_dist = sum([1 for a, b in zip(mask, query_mask) if a != b])
+
+                if lev_dist <= query_dist:
                     matching_queries.add(query_id)
+                
+                '''
             
     return matching_queries
 

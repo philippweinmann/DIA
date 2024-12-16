@@ -314,5 +314,56 @@ class TestTrie(unittest.TestCase):
 
         assert matches == {query_id_2}
 
+        lev_distance = 2
+        self.trie.clear()
+
+        # query_1:
+        query_words_1 = ['hello', "world"]
+        query_id_1, query_type_1, query_dist_1, query_words_1 = 1, 2, lev_distance, query_words_1
+        input_query_in_trie(self.trie, query_id_1, query_type_1, query_dist_1, query_words_1)
+
+        # query_2:
+        query_words_2 = ['hello', "couchie"]
+        query_id_2, query_type_2, query_dist_2, query_words_2 = 2, 2, lev_distance, query_words_2
+        input_query_in_trie(self.trie, query_id_2, query_type_2, query_dist_2, query_words_2)
+
+        # doc_1:
+        doc_id, doc_word_length, doc_contents = 1, 1, ['hexxo']
+        matches = find_document_matches(self.trie, doc_contents)
+
+        assert matches == {query_id_1, query_id_2}
+
+        # doc_2:
+        doc_id, doc_word_length, doc_contents = 2, 1, ['cxuchxe']
+        matches = find_document_matches(self.trie, doc_contents)
+
+        assert matches == {query_id_2}
+
+        # doc_3:
+        doc_id, doc_word_length, doc_contents = 3, 1, ['hell']
+        matches = find_document_matches(self.trie, doc_contents)
+
+        assert matches == {query_id_1, query_id_2}
+
+        # doc_4:
+        doc_id, doc_word_length, doc_contents = 4, 1, ['helox']
+        matches = find_document_matches(self.trie, doc_contents)
+
+        assert matches == {query_id_1, query_id_2}
+
+        # doc_5:
+        doc_id, doc_word_length, doc_contents = 5, 1, ['coxchi']
+        matches = find_document_matches(self.trie, doc_contents)
+
+        assert matches == {query_id_2}
+
+        # doc_6:
+        doc_id, doc_word_length, doc_contents = 6, 1, ['ouxhiex']
+        matches = find_document_matches(self.trie, doc_contents)
+
+        print(f"matches: {matches}")
+        assert matches == set()
+
+
 if __name__ == '__main__':
     unittest.main()
