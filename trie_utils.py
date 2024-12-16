@@ -104,12 +104,12 @@ def find_word_in_trie(trie, word, mask):
                 if mask.count(1) != 0:
                     continue
                 if mask == query_mask:
-                    matching_queries.add(query_id, original_word)
+                    matching_queries.add((query_id, original_word))
             case MatchType.HAMMING:
                 if mask != query_mask:
                     continue
                 if mask.count(1) <= query_dist:
-                    matching_queries.add(query_id, original_word)
+                    matching_queries.add((query_id, original_word))
             case MatchType.EDIT:
                 '''
                 # compare mask lengths and pad at the start to make them equal
@@ -136,21 +136,31 @@ def find_word_in_trie(trie, word, mask):
 
                 # this needs to be the last check
                 if lev_dist <= query_dist:
-                    matching_queries.add(query_id, original_word)
+                    matching_queries.add((query_id, original_word))
             
     return matching_queries
 
-def find_document_matches(trie, doc_words):
+def find_document_matches(trie, doc_words, reference_queries):
     # max distance is 3
+    found_query_words_dict = {key: set() for key in reference_queries}
 
     doc_matches = set()
     for original_word in doc_words:
         word_mask_tuples = get_deletions_for_document([original_word], max_dist=3)
         for deleted_word_comb, mask, original_word in word_mask_tuples:
-            found_query_id, query_word = find_word_in_trie(trie, deleted_word_comb, mask)
+            results = find_word_in_trie(trie, deleted_word_comb, mask)
+            # found_query_id, query_word
             # here we need to check if allwords in query have been found.
-            doc_matches.update(find_word_in_trie(trie, deleted_word_comb, mask))
-    
+
+            if results:
+                for results in results:
+                    found_query_id, query_word = results[0], results[1]
+                    found_query_words_dict[found_query_id].add(query_word)
+            
+    # add only if all words in the query have been found
+    for query_id, query_words in found_query_words_dict.items():
+        if len(query_words) == len(reference_queries[query_id]["terms"]):
+            doc_matches.add(query_id)
 
     return doc_matches
 

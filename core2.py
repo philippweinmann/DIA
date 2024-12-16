@@ -93,7 +93,7 @@ def match_document(doc_id, content):
         # print(f"Document {doc_id} matched with queries: {matched_queries}")
     # print(f"Results list after matching document {doc_id}: {results}")
     
-    trie_matches = list(find_document_matches(t, content.split()))
+    trie_matches = list(find_document_matches(t, content.split(), queries))
     print(f"Trie matches for document    {doc_id}: {trie_matches}")
     print(f"Matched queries for document {doc_id}: {matched_queries}")
     return ErrorCode.EC_SUCCESS
