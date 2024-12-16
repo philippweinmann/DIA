@@ -212,5 +212,71 @@ class TestTrie(unittest.TestCase):
 
         assert matches == {query_id_2}
 
+        # hamming distance 2
+        self.trie.clear()
+
+        hamming_distance = 2
+        # query_1:
+        query_words_1 = ['hello', "world"]
+        query_id_1, query_type_1, query_dist_1, query_words_1 = 1, 1, hamming_distance, query_words_1
+        input_query_in_trie(self.trie, query_id_1, query_type_1, query_dist_1, query_words_1)
+
+        # query_2:
+        query_words_2 = ['hello', "couchie"]
+        query_id_2, query_type_2, query_dist_2, query_words_2 = 2, 1, hamming_distance, query_words_2
+        input_query_in_trie(self.trie, query_id_2, query_type_2, query_dist_2, query_words_2)
+
+        # doc_1:
+        doc_id, doc_word_length, doc_contents = 1, 1, ['hexxo']
+        matches = find_document_matches(self.trie, doc_contents)
+
+        assert matches == {query_id_1, query_id_2}
+
+        # doc_2:
+        doc_id, doc_word_length, doc_contents = 2, 1, ['cxuchxe']
+        matches = find_document_matches(self.trie, doc_contents)
+
+        assert matches == {query_id_2}
+
+        # doc_3:
+        doc_id, doc_word_length, doc_contents = 3, 1, ['hell']
+        matches = find_document_matches(self.trie, doc_contents)
+
+        assert matches == set()
+
+
+    def test_match_levenshtein(self):
+        self._combined_exact_search(2)
+
+        self.trie.clear()
+        lev_distance = 1
+        # query_1:
+        query_words_1 = ['hello', "world"]
+        query_id_1, query_type_1, query_dist_1, query_words_1 = 1, 2, lev_distance, query_words_1
+        input_query_in_trie(self.trie, query_id_1, query_type_1, query_dist_1, query_words_1)
+
+        # query_2:
+        query_words_2 = ['hello', "couchie"]
+        query_id_2, query_type_2, query_dist_2, query_words_2 = 2, 2, lev_distance, query_words_2
+        input_query_in_trie(self.trie, query_id_2, query_type_2, query_dist_2, query_words_2)
+
+        # doc_1:
+        doc_id, doc_word_length, doc_contents = 1, 1, ['hexxo']
+        matches = find_document_matches(self.trie, doc_contents)
+
+        assert matches == set()
+
+        # doc_2:
+        doc_id, doc_word_length, doc_contents = 2, 1, ['cxuchxe']
+        matches = find_document_matches(self.trie, doc_contents)
+
+        assert matches == set()
+
+        # doc_3:
+        doc_id, doc_word_length, doc_contents = 3, 1, ['hell']
+        matches = find_document_matches(self.trie, doc_contents)
+
+        assert matches == {query_id_1, query_id_2}
+
 if __name__ == '__main__':
     unittest.main()
