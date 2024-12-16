@@ -1,7 +1,8 @@
 import unittest
 from pygtrie import CharTrie
-from trie_utils import input_query_in_trie, get_deletions_for_document, find_document_matches
+from trie_utils import input_query_in_trie, get_deletions_for_document, find_document_matches, pad_bitarrays
 from math import comb
+from bitarray import bitarray
 
 class TestTrie(unittest.TestCase):
     def setUp(self):
@@ -83,6 +84,17 @@ class TestTrie(unittest.TestCase):
 
         assert self._iterate_trie(self.trie) == input_length
         self.trie.clear()
+
+    def test_padding_function(self):
+        bitarray_1 = bitarray('000011')
+        bitarray_2 = bitarray('00100')
+
+        padded_bitarray_1, padded_bitarray_2 = pad_bitarrays(bitarray_1, bitarray_2)
+        expected_bitarray_1 = bitarray('0000011')
+        expected_bitarray_2 = bitarray('0010000')
+
+        assert padded_bitarray_1 == expected_bitarray_1
+        assert padded_bitarray_2 == expected_bitarray_2
 
 
     def _count_combinations(self, n, k_max):

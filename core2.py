@@ -94,8 +94,7 @@ def match_document(doc_id, content):
     # print(f"Results list after matching document {doc_id}: {results}")
     
     trie_matches = list(find_document_matches(t, content.split(), queries))
-    print(f"Trie matches for document    {doc_id}: {trie_matches}")
-    print(f"Matched queries for document {doc_id}: {matched_queries}")
+    assert set(trie_matches) == set(matched_queries), f"Document {doc_id} matches do not match: {trie_matches} vs {matched_queries}"
     return ErrorCode.EC_SUCCESS
 
 
@@ -112,6 +111,7 @@ def get_next_avail_res():
 
 # Helper functions for matching logic
 def matches_query(query, content):
+
     terms = query['terms']
     match_type = query['match_type']
     match_dist = query['match_dist']
