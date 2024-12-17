@@ -66,9 +66,8 @@ def match_document(doc_id, content):
     Matches a document against all active queries and stores the result if matched.
     """
     trie_matches = list(find_document_matches(trie, content.split(), queries))
-    # assert set(trie_matches) == set(matched_queries), f"Document {doc_id} matches do not match: {trie_matches} vs {matched_queries}"
-
     results.append((doc_id, trie_matches))
+    
     return ErrorCode.EC_SUCCESS
 
 
