@@ -118,3 +118,5 @@ def find_document_matches(trie, doc_words, reference_queries):
             doc_matches.add(query_id)
 
     return doc_matches
+
+# %%

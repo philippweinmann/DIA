@@ -1,6 +1,3 @@
-from enum import Enum
-import functools
-from rapidfuzz.distance import Hamming, Levenshtein
 import pygtrie
 
 from trie_utils import input_query_in_trie, delete_query_from_trie, find_document_matches
