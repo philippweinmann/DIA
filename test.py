@@ -209,8 +209,9 @@ class TestTrie(unittest.TestCase):
 
     def test_match_hamming(self):
         self._combined_exact_search(1)
-
+        
         self.trie.clear()
+        self.queries.clear()
 
         hamming_distance = 1
         # let's try some basic hamming distance tests
@@ -219,79 +220,110 @@ class TestTrie(unittest.TestCase):
         query_id_1, query_type_1, query_dist_1, query_words_1 = 1, 1, hamming_distance, query_words_1
         input_query_in_trie(self.trie, query_id_1, query_type_1, query_dist_1, query_words_1)
 
+        self.queries[query_id_1] = {
+            'terms': query_words_1,
+            'match_type': MatchType(query_type_1),
+            'match_dist': query_dist_1,
+        }
+
         # query_2:
-        query_words_2 = ['hello', "couchie"]
+        query_words_2 = ["couchie"]
         query_id_2, query_type_2, query_dist_2, query_words_2 = 2, 1, hamming_distance, query_words_2
         input_query_in_trie(self.trie, query_id_2, query_type_2, query_dist_2, query_words_2)
 
+        self.queries[query_id_2] = {
+            'terms': query_words_2,
+            'match_type': MatchType(query_type_2),
+            'match_dist': query_dist_2,
+        }
+
         # doc_1:
-        doc_id, doc_word_length, doc_contents = 1, 1, ['hello']
-        matches = find_document_matches(self.trie, doc_contents)
-        assert matches == {query_id_1, query_id_2}
+        doc_id, doc_word_length, doc_contents = 1, 1, ['hellx', 'worxd']
+        matches = find_document_matches(self.trie, doc_contents, self.queries)
+        assert matches == {query_id_1}
 
         # doc_2:
         doc_id, doc_word_length, doc_contents = 2, 1, ['hell']
-        matches = find_document_matches(self.trie, doc_contents)
+        matches = find_document_matches(self.trie, doc_contents, self.queries)
         assert matches == set()
 
         # doc_3:
         doc_id, doc_word_length, doc_contents = 3, 1, ['hellox']
-        matches = find_document_matches(self.trie, doc_contents)
+        matches = find_document_matches(self.trie, doc_contents, self.queries)
 
         assert matches == set()
 
-        # doc_4:
-        doc_id, doc_word_length, doc_contents = 4, 1, ['hxllo']
-        matches = find_document_matches(self.trie, doc_contents)
-        assert matches == {query_id_1, query_id_2}
-
         # doc_5:
         doc_id, doc_word_length, doc_contents = 5, 1, ['couchix']
-        matches = find_document_matches(self.trie, doc_contents)
+        matches = find_document_matches(self.trie, doc_contents, self.queries)
         assert matches == {query_id_2}
 
         # doc_6:
         doc_id, doc_word_length, doc_contents = 6, 1, ['couchie', 'hello']
-        matches = find_document_matches(self.trie, doc_contents)
+        matches = find_document_matches(self.trie, doc_contents, self.queries)
 
         print(f"matches: {matches}")
-        assert matches == {query_id_1, query_id_2}
+        assert matches == {query_id_2}
 
         # doc_7:
-        doc_id, doc_word_length, doc_contents = 7, 1, ['couxhie', 'helxx']
-        matches = find_document_matches(self.trie, doc_contents)
+        doc_id, doc_word_length, doc_contents = 7, 1, ['couxhie', 'couxx']
+        matches = find_document_matches(self.trie, doc_contents, self.queries)
 
         assert matches == {query_id_2}
 
         # hamming distance 2
         self.trie.clear()
+        self.queries.clear()
 
         hamming_distance = 2
         # query_1:
         query_words_1 = ['hello', "world"]
         query_id_1, query_type_1, query_dist_1, query_words_1 = 1, 1, hamming_distance, query_words_1
         input_query_in_trie(self.trie, query_id_1, query_type_1, query_dist_1, query_words_1)
+        
+        self.queries[query_id_1] = {
+            'terms': query_words_1,
+            'match_type': MatchType(query_type_1),
+            'match_dist': query_dist_1,
+        }
 
         # query_2:
-        query_words_2 = ['hello', "couchie"]
+        query_words_2 = ["hello"]
         query_id_2, query_type_2, query_dist_2, query_words_2 = 2, 1, hamming_distance, query_words_2
         input_query_in_trie(self.trie, query_id_2, query_type_2, query_dist_2, query_words_2)
 
+        self.queries[query_id_2] = {
+            'terms': query_words_2,
+            'match_type': MatchType(query_type_2),
+            'match_dist': query_dist_2,
+        }
+
+        # query_3:
+        query_words_3 = ["couchie"]
+        query_id_3, query_type_3, query_dist_3, query_words_3 = 3, 1, hamming_distance, query_words_3
+        input_query_in_trie(self.trie, query_id_3, query_type_3, query_dist_3, query_words_3)
+
+        self.queries[query_id_3] = {
+            'terms': query_words_3,
+            'match_type': MatchType(query_type_3),
+            'match_dist': query_dist_3,
+        }
+
         # doc_1:
         doc_id, doc_word_length, doc_contents = 1, 1, ['hexxo']
-        matches = find_document_matches(self.trie, doc_contents)
-
-        assert matches == {query_id_1, query_id_2}
-
-        # doc_2:
-        doc_id, doc_word_length, doc_contents = 2, 1, ['cxuchxe']
-        matches = find_document_matches(self.trie, doc_contents)
+        matches = find_document_matches(self.trie, doc_contents, self.queries)
 
         assert matches == {query_id_2}
 
+        # doc_2:
+        doc_id, doc_word_length, doc_contents = 2, 1, ['cxuchxe']
+        matches = find_document_matches(self.trie, doc_contents, self.queries)
+
+        assert matches == {query_id_3}
+
         # doc_3:
         doc_id, doc_word_length, doc_contents = 3, 1, ['hell']
-        matches = find_document_matches(self.trie, doc_contents)
+        matches = find_document_matches(self.trie, doc_contents, self.queries)
 
         assert matches == set()
 
@@ -300,129 +332,172 @@ class TestTrie(unittest.TestCase):
         self._combined_exact_search(2)
 
         self.trie.clear()
+        self.queries.clear()
+
         lev_distance = 1
         # query_1:
         query_words_1 = ['hello', "world"]
         query_id_1, query_type_1, query_dist_1, query_words_1 = 1, 2, lev_distance, query_words_1
         input_query_in_trie(self.trie, query_id_1, query_type_1, query_dist_1, query_words_1)
 
+        self.queries[query_id_1] = {
+            "terms": query_words_1,
+            "match_type": MatchType(query_type_1),
+            "match_dist": query_dist_1,
+        }
+
         # query_2:
-        query_words_2 = ['hello', "couchie"]
+        query_words_2 = ['hello']
         query_id_2, query_type_2, query_dist_2, query_words_2 = 2, 2, lev_distance, query_words_2
         input_query_in_trie(self.trie, query_id_2, query_type_2, query_dist_2, query_words_2)
 
+        self.queries[query_id_2] = {
+            "terms": query_words_2,
+            "match_type": MatchType(query_type_2),
+            "match_dist": query_dist_2,
+        }
+
+        # query_3:
+        query_words_3 = ['couchie']
+        query_id_3, query_type_3, query_dist_3, query_words_3 = 3, 2, lev_distance, query_words_3
+        input_query_in_trie(self.trie, query_id_3, query_type_3, query_dist_3, query_words_3)
+
+        self.queries[query_id_3] = {
+            "terms": query_words_3,
+            "match_type": MatchType(query_type_3),
+            "match_dist": query_dist_3,
+        }
+
         # doc_1:
         doc_id, doc_word_length, doc_contents = 1, 1, ['hexxo']
-        matches = find_document_matches(self.trie, doc_contents)
+        matches = find_document_matches(self.trie, doc_contents, self.queries)
 
         assert matches == set()
 
         # doc_2:
         doc_id, doc_word_length, doc_contents = 2, 1, ['cxuchxe']
-        matches = find_document_matches(self.trie, doc_contents)
+        matches = find_document_matches(self.trie, doc_contents, self.queries)
 
         assert matches == set()
 
         # doc_3:
         doc_id, doc_word_length, doc_contents = 3, 1, ['hell']
-        matches = find_document_matches(self.trie, doc_contents)
+        matches = find_document_matches(self.trie, doc_contents, self.queries)
 
-        assert matches == {query_id_1, query_id_2}
+        assert matches == {query_id_2}
 
         # doc_4:
         doc_id, doc_word_length, doc_contents = 4, 1, ['hellox']
-        matches = find_document_matches(self.trie, doc_contents)
+        matches = find_document_matches(self.trie, doc_contents, self.queries)
 
-        assert matches == {query_id_1, query_id_2}
+        assert matches == {query_id_2}
 
         # doc_4:
         doc_id, doc_word_length, doc_contents = 4, 1, ['helxlo']
-        matches = find_document_matches(self.trie, doc_contents)
+        matches = find_document_matches(self.trie, doc_contents, self.queries)
 
-        assert matches == {query_id_1, query_id_2}
+        assert matches == {query_id_2}
 
         # doc_5:
         doc_id, doc_word_length, doc_contents = 5, 1, ['couchi']
-        matches = find_document_matches(self.trie, doc_contents)
+        matches = find_document_matches(self.trie, doc_contents, self.queries)
 
-        assert matches == {query_id_2}
+        assert matches == {query_id_3}
 
         # doc_6:
         doc_id, doc_word_length, doc_contents = 6, 1, ['couchix']
-        matches = find_document_matches(self.trie, doc_contents)
+        matches = find_document_matches(self.trie, doc_contents, self.queries)
 
-        assert matches == {query_id_2}
+        assert matches == {query_id_3}
 
         # doc_7:
         doc_id, doc_word_length, doc_contents = 7, 1, ['coucxhie']
-        matches = find_document_matches(self.trie, doc_contents)
+        matches = find_document_matches(self.trie, doc_contents, self.queries)
 
-        assert matches == {query_id_2}
+        assert matches == {query_id_3}
 
         # doc_8:
         doc_id, doc_word_length, doc_contents = 7, 1, ['couxhie']
-        matches = find_document_matches(self.trie, doc_contents)
+        matches = find_document_matches(self.trie, doc_contents, self.queries)
 
-        assert matches == {query_id_2}
+        assert matches == {query_id_3}
 
         lev_distance = 2
         self.trie.clear()
+        self.queries.clear()
 
         # query_1:
         query_words_1 = ['hello', "world"]
         query_id_1, query_type_1, query_dist_1, query_words_1 = 1, 2, lev_distance, query_words_1
         input_query_in_trie(self.trie, query_id_1, query_type_1, query_dist_1, query_words_1)
 
+        self.queries[query_id_1] = {
+            "terms": query_words_1,
+            "match_type": MatchType(query_type_1),
+            "match_dist": query_dist_1,
+        }
+
         # query_2:
-        query_words_2 = ['hello', "couchie"]
+        query_words_2 = ['hello']
         query_id_2, query_type_2, query_dist_2, query_words_2 = 2, 2, lev_distance, query_words_2
         input_query_in_trie(self.trie, query_id_2, query_type_2, query_dist_2, query_words_2)
 
+        self.queries[query_id_2] = {
+            "terms": query_words_2,
+            "match_type": MatchType(query_type_2),
+            "match_dist": query_dist_2,
+        }
+
+        # query_3:
+        query_words_3 = ['couchie']
+        query_id_3, query_type_3, query_dist_3, query_words_3 = 3, 2, lev_distance, query_words_3
+        input_query_in_trie(self.trie, query_id_3, query_type_3, query_dist_3, query_words_3)
+
+        self.queries[query_id_3] = {
+            "terms": query_words_3,
+            "match_type": MatchType(query_type_3),
+            "match_dist": query_dist_3,
+        }
+
         # doc_1:
         doc_id, doc_word_length, doc_contents = 1, 1, ['hexxo']
-        matches = find_document_matches(self.trie, doc_contents)
-
-        assert matches == {query_id_1, query_id_2}
-
-        # doc_2:
-        doc_id, doc_word_length, doc_contents = 2, 1, ['cxuchxe']
-        matches = find_document_matches(self.trie, doc_contents)
+        matches = find_document_matches(self.trie, doc_contents, self.queries)
 
         assert matches == {query_id_2}
 
+        # doc_2:
+        doc_id, doc_word_length, doc_contents = 2, 1, ['cxuchxe']
+        matches = find_document_matches(self.trie, doc_contents, self.queries)
+
+        assert matches == {query_id_3}
+
         # doc_4:
         doc_id, doc_word_length, doc_contents = 4, 1, ['helox']
-        matches = find_document_matches(self.trie, doc_contents)
+        matches = find_document_matches(self.trie, doc_contents, self.queries)
 
-        assert matches == {query_id_1, query_id_2}
+        assert matches == {query_id_2}
 
         # let's start deleting or adding chars let's be really simple
 
         lev_distance = 1
         # doc_3:
         doc_id, doc_word_length, doc_contents = 3, 1, ['hell']
-        matches = find_document_matches(self.trie, doc_contents)
-
-        assert matches == {query_id_1, query_id_2}
-
-        # doc_5:
-        doc_id, doc_word_length, doc_contents = 5, 1, ['coxchi']
-        matches = find_document_matches(self.trie, doc_contents)
+        matches = find_document_matches(self.trie, doc_contents, self.queries)
 
         assert matches == {query_id_2}
 
+        # doc_5:
+        doc_id, doc_word_length, doc_contents = 5, 1, ['coxchi']
+        matches = find_document_matches(self.trie, doc_contents, self.queries)
+
+        assert matches == {query_id_3}
+
         # doc_6:
         doc_id, doc_word_length, doc_contents = 6, 1, ['ouxhiex']
-        matches = find_document_matches(self.trie, doc_contents)
+        matches = find_document_matches(self.trie, doc_contents, self.queries)
 
         print(f"matches: {matches}")
         assert matches == set()
-
-        lev_distance = 2
-        # query_3:
-        query_words_3 = ['hello', "world"]
-        query_id_3, query_type_3, query_dist_3, query_words_3 = 3, 2, lev_distance, query_words_3
-        input_query_in_trie(self.trie, query_id_3, query_type_3, query_dist_3, query_words_3)
 
 
 
