@@ -4,19 +4,12 @@ from rapidfuzz.distance import Hamming, Levenshtein
 import pygtrie
 
 from trie_utils import input_query_in_trie, delete_query_from_trie, find_document_matches
-
+from core_utils import MatchType
 
 class ErrorCode(Enum):
     EC_SUCCESS = 0
     EC_FAIL = 1
     EC_NO_AVAIL_RES = 2
-
-
-class MatchType(Enum):
-    EXACT = 0
-    EDIT = 2
-    HAMMING = 1
-
 
 queries = {}  # Stores active queries
 results = []  # Stores matched results for retrieval
