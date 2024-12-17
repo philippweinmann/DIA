@@ -1,12 +1,13 @@
 import unittest
 from pygtrie import CharTrie
-from trie_utils import input_query_in_trie, get_deletions_for_document, find_document_matches, pad_bitarrays
+from trie_utils import input_query_in_trie, get_deletions_for_document, find_document_matches
 from math import comb
-from bitarray import bitarray
+from trie_utils import MatchType
 
 class TestTrie(unittest.TestCase):
     def setUp(self):
         self.trie = CharTrie()
+        self.queries = {}
 
     def _iterate_trie(self, trie):
         # count the number of leafnodes in the trie:
@@ -85,21 +86,6 @@ class TestTrie(unittest.TestCase):
         assert self._iterate_trie(self.trie) == input_length
         self.trie.clear()
 
-    def test_padding_function(self):
-        bitarray_1 = bitarray('000011')
-        bitarray_2 = bitarray('00100')
-
-        padded_bitarray_1, padded_bitarray_2 = pad_bitarrays(bitarray_1, bitarray_2)
-        expected_bitarray_1 = bitarray('000011')
-        expected_bitarray_2 = bitarray('000100')
-
-        print(f"padded_bitarray_1: {padded_bitarray_1}")
-        print(f"padded_bitarray_2: {padded_bitarray_2}")
-
-        assert padded_bitarray_1 == expected_bitarray_1
-        assert padded_bitarray_2 == expected_bitarray_2
-
-
     def _count_combinations(self, n, k_max):
         """
         Calculate the total number of combinations when replacing up to k_max items
@@ -130,58 +116,94 @@ class TestTrie(unittest.TestCase):
             assert expected_combinations == len(word_mask_tuples)
 
     def _combined_exact_search(self, query_type):
+        self.queries.clear()
         query_distance = 0
 
         self.trie.clear()
 
         # query_1:
-        query_words_1 = ['hello', "world"]
+        query_words_1 = ['hello']
         query_id_1, query_type_1, query_dist_1, query_words_1 = 1, query_type, query_distance, query_words_1
         input_query_in_trie(self.trie, query_id_1, query_type_1, query_dist_1, query_words_1)
 
+        self.queries[query_id_1] = {
+            'terms': query_words_1,
+            'match_type': MatchType(query_type_1),
+            'match_dist': query_dist_1
+        }
+
         # query_2:
-        query_words_2 = ['hello', "couchie"]
+        query_words_2 = ['hello']
         query_id_2, query_type_2, query_dist_2, query_words_2 = 2, query_type, query_distance, query_words_2
         input_query_in_trie(self.trie, query_id_2, query_type_2, query_dist_2, query_words_2)
 
-        # doc_1:
+        self.queries[query_id_2] = {
+            'terms': query_words_2,
+            'match_type': MatchType(query_type_2),
+            'match_dist': query_dist_2
+        }
+
+        # query_3:
+        query_words_3 = ['couchie']
+        query_id_3, query_type_3, query_dist_3, query_words_3 = 3, query_type, query_distance, query_words_3
+        input_query_in_trie(self.trie, query_id_3, query_type_3, query_dist_3, query_words_3)
+
+        self.queries[query_id_3] = {
+            'terms': query_words_3,
+            'match_type': MatchType(query_type_3),
+            'match_dist': query_dist_3
+        }
+
+        # multiple docs:
         doc_id, doc_word_length, doc_contents = 1, 1, ['hello']
 
-        matches = find_document_matches(self.trie, doc_contents)
+        matches = find_document_matches(self.trie, doc_contents, self.queries)
         assert matches == {query_id_1, query_id_2}
 
         # doc_2:
         doc_id, doc_word_length, doc_contents = 2, 1, ['hell']
 
-        matches = find_document_matches(self.trie, doc_contents)
+        matches = find_document_matches(self.trie, doc_contents, self.queries)
         assert matches == set()
 
-        # multiple docs
-        doc_id, doc_word_length, doc_contents = 4, 1, ['hello']
-        matches = find_document_matches(self.trie, doc_contents)
+        # doc_3:
+        doc_id, doc_word_length, doc_contents = 4, 1, ['couchie']
+        matches = find_document_matches(self.trie, doc_contents, self.queries)
 
-        assert matches == {query_id_1, query_id_2}
+        assert matches == {query_id_3}
 
     def test_match_document_exact(self):
         self._combined_exact_search(0)
 
         self.trie.clear()
+        self.queries.clear()
+
         query_type = 0
         query_distance = 0
         
         # query_1:
-        query_words_1 = ['hello', "world"]
+        query_words_1 = ['hello']
         query_id_1, query_type_1, query_dist_1, query_words_1 = 1, query_type, query_distance, query_words_1
+        self.queries[query_id_1] = {
+            'terms': query_words_1,
+            'match_type': MatchType(query_type_1),
+            'match_dist': query_dist_1
+        }
         input_query_in_trie(self.trie, query_id_1, query_type_1, query_dist_1, query_words_1)
 
         # query_2:
-        query_words_2 = ['hello', "couchie"]
+        query_words_2 = ["couchie"]
         query_id_2, query_type_2, query_dist_2, query_words_2 = 2, query_type, query_distance, query_words_2
+        self.queries[query_id_2] = {
+            'terms': query_words_2,
+            'match_type': MatchType(query_type_2),
+            'match_dist': query_dist_2
+        }
         input_query_in_trie(self.trie, query_id_2, query_type_2, query_dist_2, query_words_2)
         
         # doc_1:
         doc_id, doc_word_length, doc_contents = 1, 1, ['hellox']
-        matches = find_document_matches(self.trie, doc_contents)
+        matches = find_document_matches(self.trie, doc_contents, self.queries)
 
         assert matches == set()
 
