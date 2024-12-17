@@ -1,7 +1,9 @@
 # %%
+import functools
 import itertools
 from enum import Enum
 from bitarray import bitarray
+from rapidfuzz.distance import Hamming, Levenshtein
 
 class MatchType(Enum):
     EXACT = 0
@@ -61,14 +63,22 @@ def input_query_in_trie(trie, query_id, query_type, query_dist, query_words):
             value.append(query_info)
 
 # %%
-def delete_query_from_trie(trie, query_id, query_keys):
-    for word in query_keys:
-        value = trie.get(word, None)
-        if value:
-            value.remove(query_id)
-        elif not value:
-            del trie[word]
+def delete_query_from_trie(trie, query_id, terms, match_type, match_dist):
+    query_inputs = get_trie_inputs(query_id, match_type, match_dist, terms)
+    for word, query_info in query_inputs:
+        value = trie[word] # it is garanteed to exist
+        # remove only the query that matches the query_id
+        trie[word] = [query for query in value if query[0] != query_id]
+    
+        
 # %%
+
+@functools.lru_cache(maxsize=None)
+def get_edit_distance(s1, s2):
+    """
+    Calculates the edit distance between two strings, optimized with dynamic programming.
+    """
+    return Levenshtein.distance(s1, s2)
 
 def pad_bitarrays(doc_mask, query_mask):
     """
@@ -96,7 +106,7 @@ def pad_bitarrays(doc_mask, query_mask):
 
     return padded_doc_mask, padded_query_mask
 
-def find_word_in_trie(trie, word, mask):
+def find_word_in_trie(trie, word, mask, original_document_word):
     query_infos = trie.get(word, None)
     mask = bitarray(mask)
 
@@ -105,7 +115,7 @@ def find_word_in_trie(trie, word, mask):
     
     matching_queries = set()
     for query_info in query_infos:
-        query_id, query_type, query_dist, query_mask, original_word = query_info
+        query_id, query_type, query_dist, query_mask, original_query_word = query_info
         query_mask = bitarray(query_mask)
 
         match MatchType(query_type):
@@ -113,39 +123,20 @@ def find_word_in_trie(trie, word, mask):
                 if mask.count(1) != 0:
                     continue
                 if mask == query_mask:
-                    matching_queries.add((query_id, original_word))
+                    matching_queries.add((query_id, original_query_word))
             case MatchType.HAMMING:
                 if mask != query_mask:
                     continue
                 if mask.count(1) <= query_dist:
-                    matching_queries.add((query_id, original_word))
+                    matching_queries.add((query_id, original_query_word))
             case MatchType.EDIT:
-                '''
-                # compare mask lengths and pad at the start to make them equal
-                mask_len_diff = len(mask) - len(query_mask)
+                # I will cheat for now, comparing the bitmasks is not trivial
 
-                if mask_len_diff > 0:
-                    query_mask = [0] * mask_len_diff + query_mask
-                elif mask_len_diff < 0:
-                    mask = [0] * abs(mask_len_diff) + mask
-                
-                # count amount of 1s as nand of the two masks
-                lev_dist = sum([1 for a, b in zip(mask, query_mask) if a != b])
-
-                if lev_dist <= query_dist:
-                    matching_queries.add(query_id)
-                
-                '''
-                padded_doc_mask, padded_query_mask = pad_bitarrays(mask, query_mask)
-                
-                # I believe they should always have the same length
-                assert len(padded_doc_mask) == len(padded_query_mask)
-                # nand counter for the two bitarrays
-                lev_dist = (padded_doc_mask | padded_query_mask).count(1)
+                lev_dist = Levenshtein.distance(original_document_word, original_query_word)
 
                 # this needs to be the last check
                 if lev_dist <= query_dist:
-                    matching_queries.add((query_id, original_word))
+                    matching_queries.add((query_id, original_query_word))
             
     return matching_queries
 
@@ -155,9 +146,9 @@ def find_document_matches(trie, doc_words, reference_queries):
 
     doc_matches = set()
     for original_word in doc_words:
-        word_mask_tuples = get_deletions_for_document([original_word], max_dist=3)
-        for deleted_word_comb, mask, original_word in word_mask_tuples:
-            results = find_word_in_trie(trie, deleted_word_comb, mask)
+        doc_word_mask_tuples = get_deletions_for_document([original_word], max_dist=3)
+        for doc_deleted_word_comb, mask, original_word in doc_word_mask_tuples:
+            results = find_word_in_trie(trie, doc_deleted_word_comb, mask, original_word)
             # found_query_id, query_word
             # here we need to check if allwords in query have been found.
 

@@ -13,6 +13,7 @@ def run_test_driver(test_fp):
     logging.info(f"Reading test file: {test_fp}")
     with open(test_fp, "r") as test_file:
         for line_num, line in enumerate(test_file):
+            print(line_num, end="\r")
             line = line.strip()
 
             # skip empty lines
@@ -53,7 +54,7 @@ def run_test_driver(test_fp):
                     expected_num_res = int(line_tokens[2])
                     doc_id = id
 
-                    expected_query_ids = [int(qid) for qid in line_tokens[3:]]
+                    expected_query_ids = set([int(qid) for qid in line_tokens[3:]])
 
                     logging.debug(f"Retrieving results for document ID {id}...")
                     logging.debug(f"Expected: Num Res={expected_num_res}, Expected Query IDs={expected_query_ids}")
@@ -64,9 +65,8 @@ def run_test_driver(test_fp):
                     logging.debug(f"Expected: Doc ID={id}, Num Res={expected_num_res}, Query IDs={expected_query_ids}")
                     assert err == ErrorCode.EC_SUCCESS, f"Error in GetNextAvailRes: {err}"
                     assert predicted_doc_id == doc_id
-                    assert predicted_num_res == expected_num_res
-                    print(f"Predicted Query IDs: {predicted_query_ids}, Expected Query IDs: {expected_query_ids}")
-                    assert set(predicted_query_ids) == set(expected_query_ids)
+                    assert predicted_num_res == expected_num_res, f"Predicted Num Res: {predicted_num_res}, Expected Num Res: {expected_num_res}, Query IDs: {predicted_query_ids}, Expected Query IDs: {expected_query_ids}, line: {line_num}"
+                    assert predicted_query_ids == expected_query_ids
                 
                 case _:
                     raise Exception(f"Corrupted Test File. Unknown Command '{ch}'.")

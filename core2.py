@@ -65,7 +65,8 @@ def end_query(query_id):
     Ends a query by removing it from the active query list.
     """
     # Remove query from trie
-    delete_query_from_trie(t, query_id, queries[query_id])
+    terms, match_type, match_dist = queries[query_id]['terms'], queries[query_id]['match_type'], queries[query_id]['match_dist']
+    delete_query_from_trie(t, query_id, terms, match_type, match_dist)
     
     if query_id not in queries:
         return ErrorCode.EC_FAIL
@@ -110,6 +111,10 @@ def get_next_avail_res():
         return ErrorCode.EC_NO_AVAIL_RES, None, None, None
 
     doc_id, matched_queries = results.pop(0)
+
+    # todo check if its normal to find the same result multiple times?
+    # maybe check after each found word if we're done with the query?
+    matched_queries = set(matched_queries)
     return ErrorCode.EC_SUCCESS, doc_id, len(matched_queries), matched_queries
 
 
