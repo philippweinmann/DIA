@@ -4,6 +4,41 @@ import itertools
 from core_utils import MatchType
 from bitarray import bitarray
 from rapidfuzz.distance import Levenshtein # remove once bitmask comparison works
+from functools import lru_cache
+
+# %%
+def leftshiftfromindex(ba, start_index):
+	return ba[0:start_index] + bitarray('0') + ba[start_index:]
+
+def calculate_levenshtein_distance_with_bitmask(barray_1, barray_2):
+    start_index = 0
+    l1 = len(barray_1)
+    l2 = len(barray_2)
+
+
+    while start_index < min(l1, l2):
+        if barray_1[start_index] == barray_2[start_index]:
+            start_index += 1
+        elif barray_1[start_index] == 0:
+            barray_1 = leftshiftfromindex(barray_1, start_index)
+            start_index += 1
+            l1 += 1
+        elif barray_2[start_index] == 0:
+            barray_2 = leftshiftfromindex(barray_2, start_index)
+            start_index += 1
+            l2 += 1
+
+    # only the trailing ones are left
+    ldiff = l1 - l2
+    if ldiff > 0:
+        barray_2 += bitarray('0' * ldiff)
+    elif ldiff < 0:
+        barray_1 += bitarray('0' * -ldiff)
+    
+    levenshtein_distance = (barray_1 | barray_2).count(1)
+
+    return levenshtein_distance
+# %%
 
 def generate_combinations(array_length, max_ones):
     result = set()
@@ -63,9 +98,9 @@ def get_edit_distance(s1, s2):
     """
     return Levenshtein.distance(s1, s2)
 
-def find_word_in_trie(trie, word, mask, original_document_word):
+def find_word_in_trie(trie, word, document_mask, original_document_word):
     query_infos = trie.get(word, None)
-    mask = bitarray(mask)
+    document_mask = bitarray(document_mask)
 
     if not query_infos:
         return []
@@ -77,18 +112,20 @@ def find_word_in_trie(trie, word, mask, original_document_word):
 
         match MatchType(query_type):
             case MatchType.EXACT:
-                if mask.count(1) != 0:
+                if document_mask.count(1) != 0:
                     continue
-                if mask == query_mask:
+                if document_mask == query_mask:
                     matching_queries.add((query_id, original_query_word))
             case MatchType.HAMMING:
-                if mask != query_mask:
+                if document_mask != query_mask:
                     continue
-                if mask.count(1) <= query_dist:
+                if document_mask.count(1) <= query_dist:
                     matching_queries.add((query_id, original_query_word))
             case MatchType.EDIT:
                 # I won't use the bitmasks yet, comparing the bitmasks for levenshtein is not trivial
-                lev_dist = Levenshtein.distance(original_document_word, original_query_word)
+                # lev_dist = Levenshtein.distance(original_document_word, original_query_word)
+
+                lev_dist = calculate_levenshtein_distance_with_bitmask(document_mask, query_mask)
 
                 # this needs to be the last check
                 if lev_dist <= query_dist:
