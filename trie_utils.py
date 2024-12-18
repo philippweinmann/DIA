@@ -92,7 +92,17 @@ def delete_query_from_trie(trie, query_id, terms, match_type, match_dist):
         value = trie[word] # it is garanteed to exist
         # remove only the query that matches the query_id
         trie[word] = [query for query in value if query[0] != query_id]
-    
+
+@lru_cache(maxsize=None)
+def check_exact_match(document_mask_str, query_mask_str):
+    return document_mask_str == query_mask_str
+
+@lru_cache(maxsize=None)
+def get_hamming_distance(document_mask_str, query_mask_str):
+    if document_mask_str != query_mask_str:
+        return 4  # 4 is bigger than any possible distance
+
+    return document_mask_str.count('1')
 
 def find_word_in_trie(trie, word, document_mask_str):
     query_infos = trie.get(word, None)
@@ -106,23 +116,15 @@ def find_word_in_trie(trie, word, document_mask_str):
 
         match MatchType(query_type):
             case MatchType.EXACT:
-                document_mask = bitarray(document_mask_str)
-                query_mask = bitarray(query_mask_str)
-                if document_mask.count():
-                    continue
-                if document_mask == query_mask:
+                if check_exact_match(document_mask_str, query_mask_str):
                     matching_queries.add((query_id, original_query_word))
             case MatchType.HAMMING:
-                document_mask = bitarray(document_mask_str)
-                query_mask = bitarray(query_mask_str)
-                if document_mask != query_mask:
-                    continue
-                if document_mask.count() <= query_dist:
+                if get_hamming_distance(document_mask_str, query_mask_str) <= query_dist:
                     matching_queries.add((query_id, original_query_word))
+
             case MatchType.EDIT:
                 lev_dist = calculate_levenshtein_distance_with_bitmask(document_mask_str, query_mask_str)
 
-                # this needs to be the last check
                 if lev_dist <= query_dist:
                     matching_queries.add((query_id, original_query_word))
             
@@ -140,9 +142,8 @@ def find_document_matches(trie, doc_words, reference_queries):
             
             # now we need to check if all words in query have been found.
             if results:
-                for results in results:
-                    found_query_id, query_word = results[0], results[1]
-                    found_query_words_dict[found_query_id].add(query_word)
+                for results in results: # found_query_id, query_word
+                    found_query_words_dict[results[0]].add(results[1])
             
     # add match only if all words in the query have been found
     for query_id, query_words in found_query_words_dict.items():
