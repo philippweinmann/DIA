@@ -42,7 +42,7 @@ def calculate_levenshtein_distance_with_bitmask(barray_str_1, barray_str_2):
 
     return barray_1.count()
 # %%
-
+@lru_cache(maxsize=None)
 def generate_combinations(array_length, max_ones):
     result = set()
     # Add the all-zero mask as a string

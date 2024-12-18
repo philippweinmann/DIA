@@ -13,7 +13,7 @@ def run_test_driver(test_fp):
     logging.info(f"Reading test file: {test_fp}")
     with open(test_fp, "r") as test_file:
         for line_num, line in enumerate(test_file):
-            # print(line_num, end="\r")
+            print(line_num, end="\r")
             line = line.strip()
 
             # skip empty lines
