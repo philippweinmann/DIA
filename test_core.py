@@ -10,7 +10,7 @@ def count_lines(file_path):
         return sum(1 for _ in file)
 
 @timeit
-def run_test_driver(test_fp): 
+def run_test_driver(test_fp, lev_dist_dict): 
     logging.info("Starting Test...")
     
     initialize_index()
@@ -55,7 +55,7 @@ def run_test_driver(test_fp):
                 case 'm': # m:match_document <doc_id> <content>
                     document_content = " ".join(line_tokens[3:])
                     logging.debug(f"MatchDocument: ID={id}, Content: {document_content[:50]}")
-                    err = match_document(id, document_content)
+                    err = match_document(id, document_content, lev_dist_dict)
                     assert err == ErrorCode.EC_SUCCESS, f"Error in MatchDocument: {err}"
                 
                 case 'r': # r:retrieve <doc_id> <num_res> list<query_ids>
@@ -87,11 +87,21 @@ if __name__ == "__main__":
 
     test_file_path = "./data/small_test.txt"
     # test_file_path = "./data/super_small_test.txt"
-    run_test_driver(test_file_path)
 
+    precomputed_lev_dist_dict_fp = "preloaded_dicts/small_test_lev_dist_dict.pkl"
+
+    # Load precomputed lev_dist_dict
+    logging.info("Loading precomputed lev_dist_dict...")
+    with open(precomputed_lev_dist_dict_fp, "rb") as file:
+        lev_dist_dict = pickle.load(file)
+
+    run_test_driver(test_file_path, lev_dist_dict)
+
+    '''
     # get test_file_name
     test_file_name = test_file_path.split("/")[-1].split(".")[0]
     logging.info("Dumping lev_dist_dict to file...")
     file_name = test_file_name + "_lev_dist_dict.pkl"
     with open("preloaded_dicts/" + file_name, "wb") as file:
         pickle.dump(lev_dist_dict, file)
+    '''

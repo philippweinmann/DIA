@@ -111,7 +111,7 @@ def get_hamming_distance(document_mask_str, query_mask_str):
 
     return document_mask_str.count('1')
 
-def find_word_in_trie(trie, word, document_mask_str):
+def find_word_in_trie(trie, word, document_mask_str, precomputed_lev_dist_dict):
     query_infos = trie.get(word, None)
 
     if not query_infos:
@@ -130,14 +130,14 @@ def find_word_in_trie(trie, word, document_mask_str):
                     matching_queries.add((query_id, original_query_word))
 
             case MatchType.EDIT:
-                lev_dist = calculate_levenshtein_distance_with_bitmask(document_mask_str, query_mask_str)
-
+                # lev_dist = calculate_levenshtein_distance_with_bitmask(document_mask_str, query_mask_str)
+                lev_dist = precomputed_lev_dist_dict[(document_mask_str, query_mask_str)]
                 if lev_dist <= query_dist:
                     matching_queries.add((query_id, original_query_word))
             
     return matching_queries
 
-def find_document_matches(trie, doc_words, reference_queries):
+def find_document_matches(trie, doc_words, reference_queries, precomputed_lev_dist_dict):
     found_query_words_dict = {key: set() for key in reference_queries}
 
     doc_matches = set()
@@ -145,7 +145,7 @@ def find_document_matches(trie, doc_words, reference_queries):
         # no query has distance above 3
         doc_word_mask_tuples = get_deletions_for_document([original_word], max_dist=3)
         for doc_deleted_word_comb, mask, original_word in doc_word_mask_tuples:
-            results = find_word_in_trie(trie, doc_deleted_word_comb, mask)
+            results = find_word_in_trie(trie, doc_deleted_word_comb, mask, precomputed_lev_dist_dict)
             
             # now we need to check if all words in query have been found.
             if results:

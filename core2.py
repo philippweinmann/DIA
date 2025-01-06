@@ -61,11 +61,11 @@ def end_query(query_id):
     return ErrorCode.EC_SUCCESS
 
 
-def match_document(doc_id, content):
+def match_document(doc_id, content, precomputed_lev_dist_dict):
     """
     Matches a document against all active queries and stores the result if matched.
     """
-    trie_matches = list(find_document_matches(trie, content.split(), queries))
+    trie_matches = list(find_document_matches(trie, content.split(), queries, precomputed_lev_dist_dict))
     results.append((doc_id, trie_matches))
     
     return ErrorCode.EC_SUCCESS
