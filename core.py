@@ -1,16 +1,5 @@
 from enum import Enum
-
-class ErrorCode(Enum):
-    EC_SUCCESS = 0
-    EC_FAIL = 1
-    EC_NO_AVAIL_RES = 2
-
-
-class MatchType(Enum):
-    EXACT = 0
-    EDIT = 2
-    HAMMING = 1
-
+from core_utils import MatchType, ErrorCode
 
 queries = {}  # Stores active queries
 results = []  # Stores matched results for retrieval

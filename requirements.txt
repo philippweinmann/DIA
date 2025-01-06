@@ -1,1 +1,4 @@
 numpy
+rapidfuzz
+lorem-text
+pygtrie
