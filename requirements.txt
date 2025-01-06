@@ -2,3 +2,4 @@ numpy
 rapidfuzz
 lorem-text
 pygtrie
+bitarray

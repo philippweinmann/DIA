@@ -4,6 +4,8 @@ from core_utils import MatchType
 from bitarray import bitarray
 from functools import lru_cache
 
+lev_dist_dict = {}
+
 @lru_cache(maxsize=None)
 def calculate_levenshtein_distance_with_bitmask(barray_str_1, barray_str_2):
     barray_1 = bitarray(barray_str_1)
@@ -40,7 +42,12 @@ def calculate_levenshtein_distance_with_bitmask(barray_str_1, barray_str_2):
     
     barray_1 |= barray_2
 
-    return barray_1.count()
+    lev_dist = barray_1.count()
+
+    global lev_dist_dict
+    lev_dist_dict[(barray_str_1, barray_str_2)] = lev_dist
+
+    return lev_dist
 # %%
 @lru_cache(maxsize=None)
 def generate_combinations(array_length, max_ones):

@@ -1,8 +1,13 @@
 from core2 import initialize_index, start_query, end_query, match_document, get_next_avail_res, destroy_index, ErrorCode
-
+from trie_utils import lev_dist_dict
 from testing_utils import timeit
 import logging
 logging.basicConfig()
+import pickle
+
+def count_lines(file_path):
+    with open(file_path, "r") as file:
+        return sum(1 for _ in file)
 
 @timeit
 def run_test_driver(test_fp): 
@@ -11,9 +16,12 @@ def run_test_driver(test_fp):
     initialize_index()
 
     logging.info(f"Reading test file: {test_fp}")
+    max_lines = count_lines(test_fp)
+
     with open(test_fp, "r") as test_file:
         for line_num, line in enumerate(test_file):
-            print(line_num, end="\r")
+            print(f"{line_num} / {max_lines}", end="\r")
+
             line = line.strip()
 
             # skip empty lines
@@ -72,11 +80,18 @@ def run_test_driver(test_fp):
                     raise Exception(f"Corrupted Test File. Unknown Command '{ch}'.")
 
     destroy_index()
-    logging.info(f"Your program has successfully passed all tests in file {file_path}.")
+    logging.info(f"Your program has successfully passed all tests in file {test_file_path}.")
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO) # Change to logging.DEBUG for more detailed
 
-    file_path = "./data/small_test.txt"
-    # file_path = "./data/super_small_test.txt"
-    run_test_driver(file_path)
+    test_file_path = "./data/small_test.txt"
+    # test_file_path = "./data/super_small_test.txt"
+    run_test_driver(test_file_path)
+
+    # get test_file_name
+    test_file_name = test_file_path.split("/")[-1].split(".")[0]
+    logging.info("Dumping lev_dist_dict to file...")
+    file_name = test_file_name + "_lev_dist_dict.pkl"
+    with open("preloaded_dicts/" + file_name, "wb") as file:
+        pickle.dump(lev_dist_dict, file)
