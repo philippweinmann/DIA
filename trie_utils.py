@@ -3,6 +3,8 @@ import itertools
 from core_utils import MatchType
 from bitarray import bitarray
 from functools import lru_cache
+from multiprocessing import Pool
+from rapidfuzz.distance import Levenshtein
 
 @lru_cache(maxsize=None)
 def calculate_levenshtein_distance_with_bitmask(barray_str_1, barray_str_2):
@@ -104,7 +106,7 @@ def get_hamming_distance(document_mask_str, query_mask_str):
 
     return document_mask_str.count('1')
 
-def find_word_in_trie(trie, word, document_mask_str):
+def find_word_in_trie(trie, word, document_mask_str, original_doc_word):
     query_infos = trie.get(word, None)
 
     if not query_infos:
@@ -123,32 +125,62 @@ def find_word_in_trie(trie, word, document_mask_str):
                     matching_queries.add((query_id, original_query_word))
 
             case MatchType.EDIT:
+                # consider removing this and using the library. Python GIL kinda screws with the expected precomputing speedup.
                 lev_dist = calculate_levenshtein_distance_with_bitmask(document_mask_str, query_mask_str)
+
+                # lev_dist = Levenshtein.distance(original_doc_word, original_query_word)
 
                 if lev_dist <= query_dist:
                     matching_queries.add((query_id, original_query_word))
             
     return matching_queries
 
-def find_document_matches(trie, doc_words, reference_queries):
+def find_partial_document_matches(input_thruple):
+    # This function returns the partial matches to queries. It is meant to be used with multiprocessing.
+    # The partial matches are then combined to check if a query is found.
+    (trie, doc_words, reference_queries) = input_thruple
     found_query_words_dict = {key: set() for key in reference_queries}
 
-    doc_matches = set()
     for original_word in doc_words:
         # no query has distance above 3
         doc_word_mask_tuples = get_deletions_for_document([original_word], max_dist=3)
         for doc_deleted_word_comb, mask, original_word in doc_word_mask_tuples:
-            results = find_word_in_trie(trie, doc_deleted_word_comb, mask)
+            results = find_word_in_trie(trie, doc_deleted_word_comb, mask, original_word)
             
             # now we need to check if all words in query have been found.
             if results:
                 for results in results: # found_query_id, query_word
                     found_query_words_dict[results[0]].add(results[1])
-            
-    # add match only if all words in the query have been found
-    for query_id, query_words in found_query_words_dict.items():
+    
+    return found_query_words_dict
+
+def combine_partial_document_matches(partial_query_words_dicts, reference_queries):
+    # add match to query only if all words in the query have been found
+    doc_matches = set()
+    # combine all partially found query word dicts
+    combined_query_words_dict = {}
+    for partial_query_words_dict in partial_query_words_dicts:
+        for key, value in partial_query_words_dict.items():
+            combined_query_words_dict[key] = combined_query_words_dict.get(key, set()).union(value)
+    
+    for query_id, query_words in combined_query_words_dict.items():
+        # the length comparison should work because we're handling dicts.
         if len(query_words) == len(reference_queries[query_id]["terms"]):
             doc_matches.add(query_id)
+    
+    return doc_matches
+
+def find_document_matches(trie, doc_words, reference_queries):
+    # the results from the combined ones are a list, so we're just mocking that behaviour here.
+    num_cores = 4
+
+    partial_doc_words = [doc_words[i::num_cores] for i in range(num_cores)]
+    inputs = [(trie, partial_doc_word, reference_queries) for partial_doc_word in partial_doc_words]
+
+    with Pool(num_cores) as p:
+        partial_found_query_words_dicts = p.map(find_partial_document_matches, inputs)
+
+    doc_matches = combine_partial_document_matches(partial_found_query_words_dicts, reference_queries)
 
     return doc_matches
 
