@@ -4,6 +4,7 @@ from core_utils import MatchType
 from bitarray import bitarray
 from functools import lru_cache
 from multiprocessing import Pool
+from rapidfuzz.distance import Levenshtein
 
 @lru_cache(maxsize=None)
 def calculate_levenshtein_distance_with_bitmask(barray_str_1, barray_str_2):
@@ -105,7 +106,7 @@ def get_hamming_distance(document_mask_str, query_mask_str):
 
     return document_mask_str.count('1')
 
-def find_word_in_trie(trie, word, document_mask_str):
+def find_word_in_trie(trie, word, document_mask_str, original_doc_word):
     query_infos = trie.get(word, None)
 
     if not query_infos:
@@ -127,6 +128,8 @@ def find_word_in_trie(trie, word, document_mask_str):
                 # consider removing this and using the library. Python GIL kinda screws with the expected precomputing speedup.
                 lev_dist = calculate_levenshtein_distance_with_bitmask(document_mask_str, query_mask_str)
 
+                # lev_dist = Levenshtein.distance(original_doc_word, original_query_word)
+
                 if lev_dist <= query_dist:
                     matching_queries.add((query_id, original_query_word))
             
@@ -142,7 +145,7 @@ def find_partial_document_matches(input_thruple):
         # no query has distance above 3
         doc_word_mask_tuples = get_deletions_for_document([original_word], max_dist=3)
         for doc_deleted_word_comb, mask, original_word in doc_word_mask_tuples:
-            results = find_word_in_trie(trie, doc_deleted_word_comb, mask)
+            results = find_word_in_trie(trie, doc_deleted_word_comb, mask, original_word)
             
             # now we need to check if all words in query have been found.
             if results:
