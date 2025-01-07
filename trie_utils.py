@@ -123,6 +123,7 @@ def find_word_in_trie(trie, word, document_mask_str):
                     matching_queries.add((query_id, original_query_word))
 
             case MatchType.EDIT:
+                # consider removing this and using the library. Python GIL kinda screws with the expected precomputing speedup.
                 lev_dist = calculate_levenshtein_distance_with_bitmask(document_mask_str, query_mask_str)
 
                 if lev_dist <= query_dist:
@@ -130,10 +131,11 @@ def find_word_in_trie(trie, word, document_mask_str):
             
     return matching_queries
 
-def find_document_matches(trie, doc_words, reference_queries):
+def find_partial_document_matches(trie, doc_words, reference_queries):
+    # This function returns the partial matches to queries. It is meant to be used with multiprocessing.
+    # The partial matches are then combined to check if a query is found.
     found_query_words_dict = {key: set() for key in reference_queries}
 
-    doc_matches = set()
     for original_word in doc_words:
         # no query has distance above 3
         doc_word_mask_tuples = get_deletions_for_document([original_word], max_dist=3)
@@ -144,11 +146,29 @@ def find_document_matches(trie, doc_words, reference_queries):
             if results:
                 for results in results: # found_query_id, query_word
                     found_query_words_dict[results[0]].add(results[1])
-            
-    # add match only if all words in the query have been found
-    for query_id, query_words in found_query_words_dict.items():
+    
+    return found_query_words_dict
+
+def combine_partial_document_matches(partial_query_words_dicts, reference_queries):
+    # add match to query only if all words in the query have been found
+    doc_matches = set()
+    # combine all partially found query word dicts
+    combined_query_words_dict = {}
+    for partial_query_words_dict in partial_query_words_dicts:
+        combined_query_words_dict.update(partial_query_words_dict)
+    
+    for query_id, query_words in combined_query_words_dict.items():
+        # the length comparison should work because we're handling dicts.
         if len(query_words) == len(reference_queries[query_id]["terms"]):
             doc_matches.add(query_id)
+    
+    return doc_matches
+
+def find_document_matches(trie, doc_words, reference_queries):
+    # the results from the combined ones are a list, so we're just mocking that behaviour here.
+    partial_found_query_words_dicts = [find_partial_document_matches(trie, doc_words, reference_queries)]
+
+    doc_matches = combine_partial_document_matches(partial_found_query_words_dicts, reference_queries)
 
     return doc_matches
 
