@@ -3,6 +3,7 @@ import itertools
 from core_utils import MatchType
 from bitarray import bitarray
 from functools import lru_cache
+from multiprocessing import Pool
 
 @lru_cache(maxsize=None)
 def calculate_levenshtein_distance_with_bitmask(barray_str_1, barray_str_2):
@@ -131,9 +132,10 @@ def find_word_in_trie(trie, word, document_mask_str):
             
     return matching_queries
 
-def find_partial_document_matches(trie, doc_words, reference_queries):
+def find_partial_document_matches(input_thruple):
     # This function returns the partial matches to queries. It is meant to be used with multiprocessing.
     # The partial matches are then combined to check if a query is found.
+    (trie, doc_words, reference_queries) = input_thruple
     found_query_words_dict = {key: set() for key in reference_queries}
 
     for original_word in doc_words:
@@ -155,7 +157,8 @@ def combine_partial_document_matches(partial_query_words_dicts, reference_querie
     # combine all partially found query word dicts
     combined_query_words_dict = {}
     for partial_query_words_dict in partial_query_words_dicts:
-        combined_query_words_dict.update(partial_query_words_dict)
+        for key, value in partial_query_words_dict.items():
+            combined_query_words_dict[key] = combined_query_words_dict.get(key, set()).union(value)
     
     for query_id, query_words in combined_query_words_dict.items():
         # the length comparison should work because we're handling dicts.
@@ -166,7 +169,13 @@ def combine_partial_document_matches(partial_query_words_dicts, reference_querie
 
 def find_document_matches(trie, doc_words, reference_queries):
     # the results from the combined ones are a list, so we're just mocking that behaviour here.
-    partial_found_query_words_dicts = [find_partial_document_matches(trie, doc_words, reference_queries)]
+    num_cores = 4
+
+    partial_doc_words = [doc_words[i::num_cores] for i in range(num_cores)]
+    inputs = [(trie, partial_doc_word, reference_queries) for partial_doc_word in partial_doc_words]
+
+    with Pool(num_cores) as p:
+        partial_found_query_words_dicts = p.map(find_partial_document_matches, inputs)
 
     doc_matches = combine_partial_document_matches(partial_found_query_words_dicts, reference_queries)
 
