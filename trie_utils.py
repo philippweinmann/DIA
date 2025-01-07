@@ -4,9 +4,8 @@ from core_utils import MatchType
 from bitarray import bitarray
 from functools import lru_cache
 from multiprocessing import Pool
-from rapidfuzz.distance import Levenshtein
 
-@lru_cache(maxsize=None)
+
 def calculate_levenshtein_distance_with_bitmask(barray_str_1, barray_str_2):
     barray_1 = bitarray(barray_str_1)
     barray_2 = bitarray(barray_str_2)
@@ -62,6 +61,7 @@ def get_deletion(word, mask):
     mask = bitarray(mask)
     return "".join([letter for letter, keep in zip(word, mask) if keep == 0])
 
+
 def get_deletions_for_document(words, max_dist):
     word_mask_tuples = set()
     for original_word in words:
@@ -95,11 +95,9 @@ def delete_query_from_trie(trie, query_id, terms, match_type, match_dist):
         # remove only the query that matches the query_id
         trie[word] = [query for query in value if query[0] != query_id]
 
-@lru_cache(maxsize=None)
 def check_exact_match(document_mask_str, query_mask_str):
     return document_mask_str == query_mask_str
 
-@lru_cache(maxsize=None)
 def get_hamming_distance(document_mask_str, query_mask_str):
     if document_mask_str != query_mask_str:
         return 4  # 4 is bigger than any possible distance
