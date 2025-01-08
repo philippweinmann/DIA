@@ -2,6 +2,7 @@ from testing_utils import timeit
 import logging
 logging.basicConfig()
 from core_utils import ErrorCode
+import sys
 
 # since we are using the same testing code for all different implementations,
 # let's add the correct class to the test driver.
@@ -80,12 +81,43 @@ def run_test_driver(test_fp, core_class):
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO) # Change to logging.DEBUG for more detailed
 
-    file_path = "./data/small_test.txt"
-    # file_path = "./data/super_small_test.txt"
+    # parse the users args:
+    # first args: sets the file path, 0 for super small test, 1 for small test, 2 for large test
+    # second args: sets the implementation to test, 0 for reference, 1 for max throughput, 2 for dask
 
-    # here we can choose which implementation to test
-    # 1. reference implementation:
-    from core import ReferenceCore
-    referenceCore = ReferenceCore()
+    test_file_args = sys.argv[1]
+    implementation_args = sys.argv[2]
 
-    run_test_driver(file_path, referenceCore)
+    match test_file_args:
+        case "0":
+            file_path = "./data/super_small_test.txt"
+            logging.info("Running super small test")
+        case "1":
+            file_path = "./data/small_test.txt"
+            logging.info("Running small test")
+        case "2":
+            file_path = "./data/large_test.txt"
+            logging.info("Running large test")
+        case _:
+            file_path = "./data/small_test.txt"
+            logging.info("no user input, Running small test")
+
+    match implementation_args:
+        case "0":
+            from reference_core import ReferenceCore as Current_test_core
+            logging.info("Running reference implementation")
+        case "1":
+            from max_throughput_core import MaxThroughputCore as Current_test_core
+            logging.info("Running max throughput implementation")
+        case "2":
+            from dask_core import DaskCore as Current_test_core
+            logging.info("Running dask implementation")
+        case _:
+            from max_throughput_core import MaxThroughputCore as Current_test_core
+            logging.info("no user input, Running max throughput implementation")
+
+    # 3. Implementation via dask:
+
+
+    core = Current_test_core()
+    run_test_driver(file_path, core)
