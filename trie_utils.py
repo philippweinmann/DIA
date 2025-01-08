@@ -4,6 +4,7 @@ from core_utils import MatchType
 from bitarray import bitarray
 from functools import lru_cache
 from multiprocessing import Pool
+from dask import delayed, compute
 
 
 def calculate_levenshtein_distance_with_bitmask(barray_str_1, barray_str_2):
@@ -177,6 +178,22 @@ def find_document_matches(trie, doc_words, reference_queries):
 
     with Pool(num_cores) as p:
         partial_found_query_words_dicts = p.map(find_partial_document_matches, inputs)
+
+    doc_matches = combine_partial_document_matches(partial_found_query_words_dicts, reference_queries)
+
+    return doc_matches
+
+def find_document_matches_dask(trie, doc_words, reference_queries):
+    # the results from the combined ones are a list, so we're just mocking that behaviour here.
+    num_cores = 4
+
+    partial_doc_words = [doc_words[i::num_cores] for i in range(num_cores)]
+    inputs = [(trie, partial_doc_word, reference_queries) for partial_doc_word in partial_doc_words]
+
+    partial_found_query_words_dicts = [delayed(find_partial_document_matches(input)) for input in inputs]
+
+    # let's compute it all in parallel:
+    partial_found_query_words_dicts = compute(*partial_found_query_words_dicts)
 
     doc_matches = combine_partial_document_matches(partial_found_query_words_dicts, reference_queries)
 

@@ -79,7 +79,7 @@ def run_test_driver(test_fp, core_class):
     logging.info(f"Your program has successfully passed all tests in file {file_path}.")
 
 if __name__ == "__main__":
-    logging.getLogger().setLevel(logging.INFO) # Change to logging.DEBUG for more detailed
+    logging.getLogger().setLevel(logging.INFO) # Change to logging.DEBUG for more detailed logs
 
     # parse the users args:
     # first args: sets the file path, 0 for super small test, 1 for small test, 2 for large test
@@ -115,9 +115,6 @@ if __name__ == "__main__":
         case _:
             from max_throughput_core import MaxThroughputCore as Current_test_core
             logging.info("no user input, Running max throughput implementation")
-
-    # 3. Implementation via dask:
-
 
     core = Current_test_core()
     run_test_driver(file_path, core)
