@@ -4,7 +4,6 @@ from dask import delayed, compute
 from trie_utils import find_partial_document_matches, combine_partial_document_matches
 
 def find_document_matches_dask(trie, doc_words, reference_queries):
-    # the results from the combined ones are a list, so we're just mocking that behaviour here.
     num_cores = 4
 
     partial_doc_words = [doc_words[i::num_cores] for i in range(num_cores)]

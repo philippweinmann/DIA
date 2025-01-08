@@ -168,7 +168,6 @@ def combine_partial_document_matches(partial_query_words_dicts, reference_querie
     return doc_matches
 
 def find_document_matches(trie, doc_words, reference_queries):
-    # the results from the combined ones are a list, so we're just mocking that behaviour here.
     num_cores = 4
 
     partial_doc_words = [doc_words[i::num_cores] for i in range(num_cores)]
