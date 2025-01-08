@@ -1,14 +1,16 @@
-from core2 import initialize_index, start_query, end_query, match_document, get_next_avail_res, destroy_index, ErrorCode
-
 from testing_utils import timeit
 import logging
 logging.basicConfig()
+from core_utils import ErrorCode
+
+# since we are using the same testing code for all different implementations,
+# let's add the correct class to the test driver.
 
 @timeit
-def run_test_driver(test_fp): 
+def run_test_driver(test_fp, core_class): 
     logging.info("Starting Test...")
     
-    initialize_index()
+    core_class.initialize_index()
 
     logging.info(f"Reading test file: {test_fp}")
     with open(test_fp, "r") as test_file:
@@ -35,19 +37,19 @@ def run_test_driver(test_fp):
                     
                     logging.debug(f"StartQuery: ID={id}, Match Type={match_type}, Match Dist={match_dist}, Keywords={keywords}")
                     
-                    err = start_query(id, keywords, match_type, match_dist)
+                    err = core_class.start_query(id, keywords, match_type, match_dist)
 
                     assert err == ErrorCode.EC_SUCCESS, f"Error in StartQuery: {err}"
                 
                 case 'e': # e:end_query <query_id>
                     logging.debug(f"EndQuery: ID={id}")
-                    err = end_query(id)
+                    err = core_class.end_query(id)
                     assert err == ErrorCode.EC_SUCCESS, f"Error in EndQuery: {err}"
                 
                 case 'm': # m:match_document <doc_id> <content>
                     document_content = " ".join(line_tokens[3:])
                     logging.debug(f"MatchDocument: ID={id}, Content: {document_content[:50]}")
-                    err = match_document(id, document_content)
+                    err = core_class.match_document(id, document_content)
                     assert err == ErrorCode.EC_SUCCESS, f"Error in MatchDocument: {err}"
                 
                 case 'r': # r:retrieve <doc_id> <num_res> list<query_ids>
@@ -60,7 +62,8 @@ def run_test_driver(test_fp):
                     logging.debug(f"Expected: Num Res={expected_num_res}, Expected Query IDs={expected_query_ids}")
 
                     # Verify the results immediately
-                    err, predicted_doc_id, predicted_num_res, predicted_query_ids = get_next_avail_res()
+                    err, predicted_doc_id, predicted_num_res, predicted_query_ids = core_class.get_next_avail_res()
+                    predicted_query_ids = set(predicted_query_ids)
                     
                     logging.debug(f"Expected: Doc ID={id}, Num Res={expected_num_res}, Query IDs={expected_query_ids}")
                     assert err == ErrorCode.EC_SUCCESS, f"Error in GetNextAvailRes: {err}"
@@ -71,7 +74,7 @@ def run_test_driver(test_fp):
                 case _:
                     raise Exception(f"Corrupted Test File. Unknown Command '{ch}'.")
 
-    destroy_index()
+    core_class.destroy_index()
     logging.info(f"Your program has successfully passed all tests in file {file_path}.")
 
 if __name__ == "__main__":
@@ -79,4 +82,10 @@ if __name__ == "__main__":
 
     file_path = "./data/small_test.txt"
     # file_path = "./data/super_small_test.txt"
-    run_test_driver(file_path)
+
+    # here we can choose which implementation to test
+    # 1. reference implementation:
+    from core import ReferenceCore
+    referenceCore = ReferenceCore()
+
+    run_test_driver(file_path, referenceCore)
