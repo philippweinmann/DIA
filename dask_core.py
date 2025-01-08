@@ -1,7 +1,7 @@
 # we simply overwrite some functions from max_throughput_core.py and reference_core.py in dask_core.py
 from core_utils import ErrorCode
 from max_throughput_core import MaxThroughputCore
-from trie_utils import find_document_matches_dask
+from dask_utils import find_document_matches_dask
 
 class DaskCore(MaxThroughputCore):
     def match_document(self, doc_id, content):
