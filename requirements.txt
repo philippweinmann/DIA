@@ -3,3 +3,4 @@ rapidfuzz
 lorem-text
 pygtrie
 bitarray
+dask[complete]

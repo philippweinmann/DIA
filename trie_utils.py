@@ -5,7 +5,6 @@ from bitarray import bitarray
 from functools import lru_cache
 from multiprocessing import Pool
 
-
 def calculate_levenshtein_distance_with_bitmask(barray_str_1, barray_str_2):
     barray_1 = bitarray(barray_str_1)
     barray_2 = bitarray(barray_str_2)
@@ -169,7 +168,6 @@ def combine_partial_document_matches(partial_query_words_dicts, reference_querie
     return doc_matches
 
 def find_document_matches(trie, doc_words, reference_queries):
-    # the results from the combined ones are a list, so we're just mocking that behaviour here.
     num_cores = 4
 
     partial_doc_words = [doc_words[i::num_cores] for i in range(num_cores)]
