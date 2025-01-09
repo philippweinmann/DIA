@@ -2,12 +2,21 @@
 
 Reference implementation:
 
-- Small dataset: Time=13523[13s:523ms]
-- Big dataset: Time=781809[13m:1s:809ms]
+- Small dataset: Time=[13s:523ms]
+- Big dataset: Time=[13m:1s:809ms]
 
 Reference implementation, with Python:
 
-- Small dataset: Time=3506221[0h:58m:26s:221ms]
+- Small dataset: Time=[0h:58m:26s:221ms]
+
+Maximum Throughput:
+
+- Small dataset: Time=[0h:1m:26s:221ms]
+
+Dask implementation:
+
+- Small dataset: Time=[0h:2m:50s:835ms]
+
 
 # Prerequisites:
 
