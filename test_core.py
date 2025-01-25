@@ -96,7 +96,7 @@ if __name__ == "__main__":
             file_path = "./data/small_test.txt"
             logging.info("Running small test")
         case "2":
-            file_path = "./data/large_test.txt"
+            file_path = "./data/big_test.txt"
             logging.info("Running large test")
         case _:
             file_path = "./data/small_test.txt"

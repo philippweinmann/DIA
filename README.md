@@ -12,10 +12,12 @@ Reference implementation, with Python:
 Maximum Throughput:
 
 - Small dataset: Time=[0h:1m:26s:221ms]
+- Big dataset: Time=[0h:58m:26s:221ms]
 
 Dask implementation:
 
 - Small dataset: Time=[0h:2m:50s:835ms]
+
 
 
 # Prerequisites:
